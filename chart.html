@@ -271,16 +271,24 @@
   thead th.sorted { color: var(--ink); }
   thead th.sorted .arrow { opacity: 1; color: var(--accent); }
 
-  /* 1열(순위) 고정: 가로 스크롤해도 순위 열이 항상 보이도록. 헤더 칸은 위+왼쪽
-     모두에 고정돼 코너에 앵커된다. */
+  /* 1~2열(순위, 선수명) 고정: 가로 스크롤해도 항상 보이도록. 헤더 칸은
+     위+왼쪽 모두에 고정돼 코너에 앵커된다. 2열의 left 값은 1열의 실제
+     렌더링 너비(폰트/여백에 따라 달라짐)를 JS가 측정해 --col1-w로 채운다. */
   thead th:first-child { left: 0; z-index: 3; }
+  thead th:nth-child(2) { left: var(--col1-w, 60px); z-index: 3; }
   tbody td:first-child {
     position: sticky; left: 0;
+    background: var(--card);
+    z-index: 1;
+  }
+  tbody td:nth-child(2) {
+    position: sticky; left: var(--col1-w, 60px);
     background: var(--card);
     box-shadow: 1px 0 0 var(--line);
     z-index: 1;
   }
-  tbody tr:hover td:first-child { background: var(--badge-gen-bg); }
+  tbody tr:hover td:first-child,
+  tbody tr:hover td:nth-child(2) { background: var(--badge-gen-bg); }
 
   tbody tr { border-bottom: 1px solid var(--line); }
   tbody tr:nth-child(odd) { background: var(--row-stripe); }
@@ -780,7 +788,20 @@
       const arrow = th.querySelector('.arrow');
       if (th.dataset.key === sortKey) arrow.textContent = sortAsc ? '▲' : '▼';
     });
+
+    syncStickyColWidth();
   }
+
+  // 2열(선수명)의 sticky left 값은 1열(순위) 실제 렌더링 너비에 달려 있고,
+  // 그 너비는 폰트 크기/패딩(모바일 미디어쿼리)에 따라 달라지므로 매 렌더링과
+  // 리사이즈마다 실측해서 --col1-w 커스텀 프로퍼티에 반영한다.
+  function syncStickyColWidth() {
+    const table = document.getElementById('roster-table');
+    const firstTh = table.querySelector('thead th:first-child');
+    if (!firstTh) return;
+    table.style.setProperty('--col1-w', firstTh.getBoundingClientRect().width + 'px');
+  }
+  window.addEventListener('resize', syncStickyColWidth);
 
   document.querySelectorAll('thead th').forEach(th => {
     th.addEventListener('click', () => {
