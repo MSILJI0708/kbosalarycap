@@ -352,13 +352,15 @@
     border-radius: 8px;
     border: 1px solid var(--line);
     background: var(--card);
+    color: var(--ink);
     cursor: pointer;
     min-width: 84px;
     box-shadow: var(--shadow);
+    font-family: var(--font-body);
   }
   .league-chip.active { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
   .league-chip .lc-rank { font-size: 10px; color: var(--muted); font-weight: 700; }
-  .league-chip .lc-team { font-size: 13px; font-weight: 800; }
+  .league-chip .lc-team { font-size: 13px; font-weight: 800; color: var(--ink); }
   .league-chip .lc-val { font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); }
 
   footer.disclaimer {
@@ -739,7 +741,18 @@
 
   function renderPies() {
     const teamPie = pieData[currentTeam].modes[pieMode];
-    drawPie('rank-pie-svg', 'rank-pie-legend', teamPie.rank_pie, document.getElementById('rank-pie-sub'));
+    let rankBuckets = teamPie.rank_pie;
+    if (pieMode === 'cap') {
+      // 샐러리캡 산정 대상은 top40뿐이라 '순위 구간' 파이에서는 그 밖(TOP40 외)을
+      // 아예 빼고, 남은 구간끼리 비중(pct)을 다시 100%로 정규화한다.
+      rankBuckets = rankBuckets.filter(b => b.label !== 'TOP40 외');
+      const total = rankBuckets.reduce((s, b) => s + b.spend_eok, 0);
+      rankBuckets = rankBuckets.map(b => ({
+        ...b,
+        pct: total > 0 ? Math.round((b.spend_eok / total) * 10000) / 100 : 0,
+      }));
+    }
+    drawPie('rank-pie-svg', 'rank-pie-legend', rankBuckets, document.getElementById('rank-pie-sub'));
     drawPie('abs-pie-svg', 'abs-pie-legend', teamPie.abs_pie, document.getElementById('abs-pie-sub'));
   }
 
