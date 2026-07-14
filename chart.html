@@ -299,6 +299,7 @@
 
   td { padding: 9px 14px; font-size: 13.5px; vertical-align: middle; }
   td.rank { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); width: 34px; }
+  td.rank.cap-target { color: var(--accent); font-weight: 800; }
   td.name { font-weight: 700; }
   td.name .lvl {
     display: inline-block;
@@ -326,8 +327,6 @@
   .badge.gen { background: var(--badge-gen-bg); color: var(--badge-gen-tx); }
   .badge.min { background: var(--badge-min-bg); color: var(--badge-min-tx); }
   .badge.moved { background: color-mix(in srgb, var(--accent) 16%, var(--card)); color: var(--accent); }
-
-  .cap-mark { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 
   tfoot td {
     padding: 10px 14px;
@@ -568,12 +567,11 @@
             <th data-key="type">구분<span class="arrow">▼</span></th>
             <th data-key="salary_manwon" class="num">연봉<span class="arrow">▼</span></th>
             <th data-key="cap_pct" class="num">상한액 대비<span class="arrow">▼</span></th>
-            <th data-key="top40" class="num">캡 대상<span class="arrow">▼</span></th>
           </tr>
         </thead>
         <tbody id="roster-body"></tbody>
         <tfoot>
-          <tr><td colspan="9" id="table-foot"></td></tr>
+          <tr><td colspan="8" id="table-foot"></td></tr>
         </tfoot>
       </table>
     </div>
@@ -776,7 +774,7 @@
 
     document.getElementById('roster-body').innerHTML = rows.map(p => `
       <tr class="${p.top40 ? '' : 'outside40'}">
-        <td class="rank">${p.rank}</td>
+        <td class="rank ${p.top40 ? 'cap-target' : ''}" title="${p.top40 ? '상위 40인 포함 (경쟁균형세 산정 대상)' : ''}">${p.rank}</td>
         <td class="name">${p.name}${p.level === '2군' ? '<span class="lvl">2군</span>' : ''}</td>
         <td>${p.pos}</td>
         <td class="mono num">${p.age ?? '—'}</td>
@@ -788,12 +786,11 @@
         </td>
         <td class="mono salary num">${fmtManwon(p.salary_manwon)}<span style="color:var(--muted); font-weight:400;"> 만원</span></td>
         <td class="mono pct num">${p.cap_pct.toFixed(2)}%</td>
-        <td class="num">${p.top40 ? '<span class="cap-mark" title="상위 40인 포함"></span>' : ''}</td>
       </tr>
     `).join('');
 
     document.getElementById('table-foot').textContent =
-      `상단 원형 점(●)이 있는 40명이 경쟁균형세 산정 대상입니다. 41위 이하는 표에서 옅게 표시됩니다.`;
+      `순위가 색으로 강조된 40명이 경쟁균형세 산정 대상입니다. 41위 이하는 표에서 옅게 표시됩니다.`;
 
     document.querySelectorAll('thead th').forEach(th => {
       th.classList.toggle('sorted', th.dataset.key === sortKey);
