@@ -512,7 +512,7 @@
         <td class="name"><button class="name-btn" type="button" data-pid="${p.playerId}">${p.name}</button><span class="team-tag">${p.team} · ${p.pos}</span></td>
         <td><span class="badge ${p.type === 1 ? 'grad' : 'nongrad'}">${p.type === 1 ? '4년제 대졸' : '비대졸'}</span></td>
         <td class="mono num">${p.completed} / ${p.faThreshold}</td>
-        <td class="num"><span class="fa-count ${faClass}">${faText}</span></td>
+        <td class="num"><span class="fa-count ${faClass}" title="${p.faNote || ''}">${faText}${p.faNote ? ' *' : ''}</span></td>
         <td class="num natl-cell"><span class="earned">${p.natlEarned}</span>획득 / ${p.natlUsed}사용${p.natlUnused ? ` (잔여 ${p.natlUnused})` : ''}</td>
         <td class="mono num">${p.seasonsPlayed}<span style="color:var(--muted); font-weight:400;">(${p.firstYear}~${p.lastYear})</span></td>
         <td>${sparkline(p.byYear)}</td>
@@ -559,12 +559,13 @@
 
     document.getElementById('modal-name').textContent = p.name;
     document.getElementById('modal-sub').textContent =
-      `${p.team} · ${p.pos} · ${p.type === 1 ? '4년제 대졸(FA 7시즌)' : '비대졸(FA 8시즌)'} · ${p.firstYear}~${p.lastYear}`;
+      `${p.team} · ${p.pos} · ${p.type === 1 ? '4년제 대졸' : '비대졸'} · ${p.firstYear}~${p.lastYear}`;
 
     document.getElementById('modal-summary').innerHTML = `
       <span>완성 정규시즌 <b>${p.completed}</b> / ${p.faThreshold}</span>
       <span>FA까지 <b>${p.faRemaining === 0 ? '충족' : p.faRemaining + '시즌'}</b></span>
       <span>국가대표 보상일수 <b>${p.natlEarned}</b>일 획득 · <b>${p.natlUsed}</b>일 사용</span>
+      ${p.faNote ? `<span style="flex-basis:100%; color:var(--accent);">${p.faNote}</span>` : ''}
     `;
 
     if (d.seasons.length === 0) {
