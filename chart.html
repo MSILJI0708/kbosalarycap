@@ -123,6 +123,21 @@
   }
   .hero-inner { max-width: 1040px; margin: 0 auto; position: relative; }
 
+  .chapter-nav { margin-bottom: 16px; }
+  .chapter-nav a {
+    color: #c3cbdc;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 100px;
+    padding: 5px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chapter-nav a:hover { border-color: rgba(255,255,255,0.4); }
+
   .controls {
     display: flex;
     align-items: flex-end;
@@ -485,6 +500,7 @@
 
 <div class="hero" id="hero">
   <div class="hero-inner">
+    <div class="chapter-nav"><a href="fa.html">FA 서비스타임 현황 보기 →</a></div>
     <div class="controls">
       <div class="control-field">
         <label for="season-select">Season</label>

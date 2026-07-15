@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KBO FA 서비스타임 현황</title>
+</head>
+<body>
+<style>
+  :root {
+    --page:        #eef0f5;
+    --card:        #ffffff;
+    --header-navy: #0c1e3e;
+    --header-navy-2:#132a52;
+    --ink:         #0b1220;
+    --ink-2:       #4b5568;
+    --muted:       #8b93a3;
+    --line:        rgba(11,18,32,0.10);
+    --line-strong: rgba(11,18,32,0.18);
+    --accent:      #c8102e;
+    --accent-ink:  #ffffff;
+    --good:        #0ca30c;
+    --critical:    #d03b3b;
+    --badge-gen-bg:#e7ebf3;
+    --badge-gen-tx:#0c1e3e;
+    --badge-min-bg:#eceef1;
+    --badge-min-tx:#5b5f66;
+    --row-stripe:  rgba(12,30,62,0.028);
+    --row-dim:     rgba(11,18,32,0.35);
+    --shadow:      0 1px 2px rgba(11,18,32,0.06), 0 8px 24px -12px rgba(11,18,32,0.18);
+    --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --control-bg:  #ffffff;
+    --control-tx:  #0b1220;
+  }
+  :root[data-theme="dark"] {
+    --page:        #090d16;
+    --card:        #11182a;
+    --header-navy: #060f22;
+    --header-navy-2:#0c1e3e;
+    --ink:         #f2f4f8;
+    --ink-2:       #aab2c4;
+    --muted:       #767f92;
+    --line:        rgba(255,255,255,0.09);
+    --line-strong: rgba(255,255,255,0.16);
+    --accent:      #e0435c;
+    --accent-ink:  #ffffff;
+    --good:        #34c759;
+    --critical:    #e66767;
+    --badge-gen-bg:#1b2740;
+    --badge-gen-tx:#c7d4ec;
+    --badge-min-bg:#20242e;
+    --badge-min-tx:#b7bac2;
+    --row-stripe:  rgba(255,255,255,0.025);
+    --row-dim:     rgba(255,255,255,0.32);
+    --shadow:      0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --control-bg:  #182338;
+    --control-tx:  #f2f4f8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page:        #090d16;
+      --card:        #11182a;
+      --header-navy: #060f22;
+      --header-navy-2:#0c1e3e;
+      --ink:         #f2f4f8;
+      --ink-2:       #aab2c4;
+      --muted:       #767f92;
+      --line:        rgba(255,255,255,0.09);
+      --line-strong: rgba(255,255,255,0.16);
+      --accent:      #e0435c;
+      --accent-ink:  #ffffff;
+      --good:        #34c759;
+      --critical:    #e66767;
+      --badge-gen-bg:#1b2740;
+      --badge-gen-tx:#c7d4ec;
+      --badge-min-bg:#20242e;
+      --badge-min-tx:#b7bac2;
+      --row-stripe:  rgba(255,255,255,0.025);
+      --row-dim:     rgba(255,255,255,0.32);
+      --shadow:      0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --control-bg:  #182338;
+      --control-tx:  #f2f4f8;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px 64px; }
+
+  /* ---------- Header ---------- */
+  .hero {
+    position: relative;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.05) 0px,
+        rgba(255,255,255,0.05) 1px,
+        transparent 1px,
+        transparent 13px
+      ),
+      linear-gradient(160deg, var(--header-navy-2), var(--header-navy) 70%);
+    color: #f3f5fa;
+    padding: 28px 20px 30px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 40%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 1160px; margin: 0 auto; position: relative; }
+
+  .chapter-nav { margin-bottom: 16px; }
+  .chapter-nav a {
+    color: #c3cbdc;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 100px;
+    padding: 5px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chapter-nav a:hover { border-color: rgba(255,255,255,0.4); }
+
+  .controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .control-field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #9aa4bb;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  .control-field select, .control-field input {
+    appearance: none;
+    background: var(--control-bg);
+    color: var(--control-tx);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    min-width: 160px;
+  }
+  .control-field select {
+    padding-right: 32px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b93a3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  .control-field input { font-weight: 600; min-width: 200px; }
+  .control-field input::placeholder { color: var(--muted); font-weight: 500; }
+
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: #9aa4bb; margin: 0 0 6px; }
+  .eyebrow strong { color: var(--accent); }
+  h1.page-title {
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+  .page-sub { font-size: 14px; color: #c3cbdc; margin: 0; max-width: 72ch; line-height: 1.6; }
+
+  /* ---------- Stat tiles ---------- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .tile {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 16px 14px;
+    box-shadow: var(--shadow);
+  }
+  .tile.navy { border-top-color: var(--header-navy-2); }
+  .tile-label {
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; margin: 0 0 8px;
+  }
+  .tile-value {
+    font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+    font-size: 26px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; margin: 0 0 4px;
+  }
+  .tile-value small { font-size: 14px; font-weight: 600; color: var(--ink-2); margin-left: 2px; }
+  .tile-foot { font-size: 12px; color: var(--ink-2); }
+
+  /* ---------- Section heading ---------- */
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; flex-wrap: wrap; }
+  .section-head h2 { font-size: 18px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+  .section-note { font-size: 12px; color: var(--muted); }
+
+  /* ---------- Table ---------- */
+  .table-card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+  .table-scroll { overflow: auto; max-height: 74vh; }
+  table { border-collapse: collapse; width: 100%; min-width: 980px; }
+  thead th {
+    position: sticky; top: 0;
+    background: var(--card);
+    text-align: left;
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line-strong);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    z-index: 2;
+  }
+  thead th:hover { color: var(--ink); }
+  thead th.num, td.num { text-align: right; }
+  thead th .arrow { font-size: 9px; opacity: 0.5; margin-left: 3px; }
+  thead th.sorted { color: var(--ink); }
+  thead th.sorted .arrow { opacity: 1; color: var(--accent); }
+
+  thead th:first-child { left: 0; z-index: 3; }
+  tbody td:first-child {
+    position: sticky; left: 0;
+    background: var(--card);
+    box-shadow: 1px 0 0 var(--line);
+    z-index: 1;
+  }
+  tbody tr:hover td:first-child { background: var(--badge-gen-bg); }
+
+  tbody tr { border-bottom: 1px solid var(--line); }
+  tbody tr:nth-child(odd) { background: var(--row-stripe); }
+  tbody tr:hover { background: var(--badge-gen-bg); }
+
+  td { padding: 9px 14px; font-size: 13.5px; vertical-align: middle; }
+  td.name { font-weight: 700; width: 108px; }
+  td.name .team-tag { display: block; font-size: 10.5px; font-weight: 700; color: var(--muted); margin-top: 1px; }
+  td.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px; white-space: nowrap; }
+  .badge.grad { background: var(--badge-gen-bg); color: var(--badge-gen-tx); }
+  .badge.nongrad { background: var(--badge-min-bg); color: var(--badge-min-tx); }
+
+  .fa-count { font-family: var(--font-mono); font-weight: 800; font-size: 15px; }
+  .fa-count.now { color: var(--good); }
+  .fa-count.soon { color: var(--accent); }
+
+  .natl-cell { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+  .natl-cell .earned { color: var(--ink); font-weight: 700; }
+
+  .spark { display: flex; align-items: flex-end; gap: 1.5px; height: 28px; }
+  .spark i {
+    display: block; width: 5px; min-width: 5px; border-radius: 1px 1px 0 0;
+    background: var(--muted); opacity: 0.55;
+  }
+  .spark i.full { background: var(--accent); opacity: 1; }
+
+  tfoot td { padding: 10px 14px; font-size: 11.5px; color: var(--muted); border-top: 1px solid var(--line-strong); }
+
+  footer.disclaimer { max-width: 1160px; margin: 18px auto 0; font-size: 11.5px; line-height: 1.7; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 0 4px 16px; }
+    .tiles { grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 12px; }
+    .tile { padding: 7px 7px 6px; }
+    .tile-value { font-size: 21px; }
+    .hero { padding: 9px 5px 8px; margin-bottom: 12px; }
+    .hero-inner { max-width: 100%; }
+    .page-sub { font-size: 12.5px; }
+    .section-head { margin-bottom: 5px; }
+    .section-head h2 { font-size: 16px; }
+    .controls { gap: 8px; margin-bottom: 10px; }
+    .control-field select, .control-field input { min-width: 118px; font-size: 13px; padding: 6px 10px; }
+    thead th { font-size: 10px; padding: 5px 6px; }
+    td { font-size: 12.5px; padding: 4px 6px; }
+  }
+</style>
+
+<div class="hero" id="hero">
+  <div class="hero-inner">
+    <div class="chapter-nav"><a href="chart.html">← 경쟁균형세(샐러리캡) 현황으로</a></div>
+    <div class="controls">
+      <div class="control-field">
+        <label for="team-select">구단</label>
+        <select id="team-select"></select>
+      </div>
+      <div class="control-field">
+        <label for="name-search">선수명 검색</label>
+        <input id="name-search" type="text" placeholder="이름으로 검색">
+      </div>
+    </div>
+    <p class="eyebrow">KBO 선수단 FA 서비스타임 근사 리포트 &middot; <strong>2시즌 이상 등록 이력 보유자</strong></p>
+    <h1 class="page-title">FA 서비스타임 현황</h1>
+    <p class="page-sub">
+      각 선수의 KBO 등록일수(SeasonReg)를 근거로 완성 정규시즌 수를 계산합니다.
+      한 시즌에 145일 이상 등록되면 단독으로 1시즌, 미달 시즌들은 국가대표 보상일수와
+      함께 모아 145일을 넘길 수 있는 조합을 찾아 시즌으로 인정합니다.
+      진행 중인 올해 시즌은 완성 판정에서 제외했습니다.
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tiles" id="tiles"></div>
+
+  <div class="section-head">
+    <h2>선수별 현황</h2>
+    <span class="section-note" id="table-note"></span>
+  </div>
+
+  <div class="table-card">
+    <div class="table-scroll">
+      <table id="fa-table">
+        <thead>
+          <tr>
+            <th data-key="name">선수명</th>
+            <th data-key="type">유형</th>
+            <th data-key="completed" class="num">완성시즌</th>
+            <th data-key="faRemaining" class="num sorted">FA까지<span class="arrow">▼</span></th>
+            <th data-key="natlEarned" class="num">국가대표 보상일수(획득/사용)</th>
+            <th data-key="seasonsPlayed" class="num">출전시즌</th>
+            <th>시즌별 등록일수</th>
+          </tr>
+        </thead>
+        <tbody id="fa-body"></tbody>
+        <tfoot>
+          <tr><td colspan="7" id="table-foot"></td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <footer class="disclaimer">
+    ⚠ 근사치입니다. 과거 시즌의 부상자명단(IL) 세부내역은 KBO 사이트에 연도 선택 기능이
+    없어 가져올 수 없어서(현재 시즌만 표시), 과거 시즌 등록일수엔 IL 30일 상한이
+    적용되지 않았을 수 있습니다(진행 중인 올해 시즌만 자동 보정). "유형"(4년제 대졸
+    여부)은 KBO 공개 경력 정보에서 자동 추정한 값으로, 학교명이 얼리 드래프트
+    표시 없이 있으면 대졸로 간주합니다 - 드문 예외가 있을 수 있습니다. FA 기준
+    시즌은 대졸 8년/비대졸 7년으로 계산했습니다.
+  </footer>
+</div>
+
+<script>
+(async function () {
+  const players = await fetch('fa_league_summary.json').then(r => r.json());
+
+  const TEAM_ORDER = ['KIA','KT','LG','NC','SSG','두산','롯데','삼성','키움','한화'];
+  const teamSelect = document.getElementById('team-select');
+  const teams = [...new Set(players.map(p => p.team))]
+    .sort((a, b) => TEAM_ORDER.indexOf(a) - TEAM_ORDER.indexOf(b));
+  teamSelect.innerHTML = ['<option value="">전체 구단</option>']
+    .concat(teams.map(t => `<option value="${t}">${t}</option>`)).join('');
+
+  let sortKey = 'faRemaining';
+  let sortAsc = true;
+  let teamFilter = '';
+  let nameFilter = '';
+
+  function renderTiles(rows) {
+    const total = rows.length;
+    const now = rows.filter(p => p.faRemaining === 0).length;
+    const soon = rows.filter(p => p.faRemaining >= 1 && p.faRemaining <= 2).length;
+    const grads = rows.filter(p => p.type === 1).length;
+    const tiles = [
+      { label: '표시된 선수', value: total, unit: '명', foot: '2시즌 이상 KBO 등록 이력', navy: true },
+      { label: 'FA 자격 충족', value: now, unit: '명', foot: '완성 정규시즌 ≥ FA 기준' },
+      { label: 'FA 임박 (1~2시즌)', value: soon, unit: '명', foot: '조만간 자격 충족 예상' },
+      { label: '4년제 대졸', value: grads, unit: '명', foot: `전체 중 ${total ? (grads/total*100).toFixed(1) : 0}%`, navy: true },
+    ];
+    document.getElementById('tiles').innerHTML = tiles.map(t => `
+      <div class="tile ${t.navy ? 'navy' : ''}">
+        <p class="tile-label">${t.label}</p>
+        <p class="tile-value">${t.value}<small>${t.unit}</small></p>
+        <p class="tile-foot">${t.foot}</p>
+      </div>
+    `).join('');
+  }
+
+  function sparkline(byYear) {
+    const years = Object.keys(byYear).sort();
+    const maxH = 28;
+    const bars = years.map(y => {
+      const d = byYear[y];
+      const h = Math.max(2, Math.round(Math.min(d, 200) / 200 * maxH));
+      const full = d >= 145 ? 'full' : '';
+      return `<i class="${full}" style="height:${h}px" title="${y}: ${d}일"></i>`;
+    }).join('');
+    return `<div class="spark">${bars}</div>`;
+  }
+
+  function applyFilters() {
+    let rows = players;
+    if (teamFilter) rows = rows.filter(p => p.team === teamFilter);
+    if (nameFilter) rows = rows.filter(p => p.name.includes(nameFilter));
+    return rows;
+  }
+
+  function render() {
+    let rows = applyFilters();
+    rows = [...rows].sort((a, b) => {
+      let va = a[sortKey], vb = b[sortKey];
+      if (typeof va === 'string') { vb = String(vb); }
+      if (va < vb) return sortAsc ? -1 : 1;
+      if (va > vb) return sortAsc ? 1 : -1;
+      return a.name < b.name ? -1 : 1;
+    });
+
+    renderTiles(rows);
+
+    document.getElementById('fa-body').innerHTML = rows.map(p => {
+      const faClass = p.faRemaining === 0 ? 'now' : (p.faRemaining <= 2 ? 'soon' : '');
+      const faText = p.faRemaining === 0 ? '충족' : `${p.faRemaining}시즌`;
+      return `
+      <tr>
+        <td class="name">${p.name}<span class="team-tag">${p.team} · ${p.pos}</span></td>
+        <td><span class="badge ${p.type === 1 ? 'grad' : 'nongrad'}">${p.type === 1 ? '4년제 대졸' : '비대졸'}</span></td>
+        <td class="mono num">${p.completed} / ${p.faThreshold}</td>
+        <td class="num"><span class="fa-count ${faClass}">${faText}</span></td>
+        <td class="num natl-cell"><span class="earned">${p.natlEarned}</span>획득 / ${p.natlUsed}사용${p.natlUnused ? ` (잔여 ${p.natlUnused})` : ''}</td>
+        <td class="mono num">${p.seasonsPlayed}<span style="color:var(--muted); font-weight:400;">(${p.firstYear}~${p.lastYear})</span></td>
+        <td>${sparkline(p.byYear)}</td>
+      </tr>
+    `;
+    }).join('');
+
+    document.getElementById('table-note').textContent = `${rows.length}명 표시 중`;
+    document.getElementById('table-foot').textContent =
+      '진하게 표시된 막대는 그 시즌 145일 이상 등록(단독 정규시즌 완성)을 의미합니다.';
+
+    document.querySelectorAll('thead th').forEach(th => {
+      th.classList.toggle('sorted', th.dataset.key === sortKey);
+      const arrow = th.querySelector('.arrow');
+      if (arrow) arrow.textContent = sortAsc ? '▲' : '▼';
+    });
+  }
+
+  document.querySelectorAll('thead th[data-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.key;
+      if (sortKey === key) { sortAsc = !sortAsc; }
+      else { sortKey = key; sortAsc = key === 'name'; }
+      if (!th.querySelector('.arrow')) th.innerHTML += '<span class="arrow"></span>';
+      render();
+    });
+  });
+
+  teamSelect.addEventListener('change', () => { teamFilter = teamSelect.value; render(); });
+  document.getElementById('name-search').addEventListener('input', (e) => { nameFilter = e.target.value.trim(); render(); });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
