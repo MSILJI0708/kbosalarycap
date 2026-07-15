@@ -255,7 +255,68 @@
 
   td { padding: 9px 14px; font-size: 13.5px; vertical-align: middle; }
   td.name { font-weight: 700; width: 108px; }
+  td.name button.name-btn {
+    all: unset; cursor: pointer; font-weight: 700; color: var(--ink);
+    border-bottom: 1px dashed var(--muted);
+  }
+  td.name button.name-btn:hover { color: var(--accent); border-bottom-color: var(--accent); }
   td.name .team-tag { display: block; font-size: 10.5px; font-weight: 700; color: var(--muted); margin-top: 1px; }
+
+  /* ---------- Detail modal ---------- */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(5,8,16,0.6);
+    z-index: 10;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 6vh 16px;
+    overflow-y: auto;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    width: 100%; max-width: 560px;
+    padding: 20px 22px 18px;
+  }
+  .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .modal-head h3 { font-size: 19px; font-weight: 800; margin: 0; }
+  .modal-head .modal-sub { font-size: 12.5px; color: var(--muted); margin: 2px 0 0; }
+  .modal-close { all: unset; cursor: pointer; color: var(--muted); font-size: 20px; line-height: 1; padding: 2px 6px; }
+  .modal-close:hover { color: var(--ink); }
+  .modal-summary {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin: 14px 0 16px; padding: 10px 12px;
+    background: var(--page); border-radius: 8px; font-size: 12.5px; color: var(--ink-2);
+  }
+  .modal-summary b { color: var(--ink); font-family: var(--font-mono); }
+  .modal-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .modal-list li {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 8px 10px; border-radius: 7px; background: var(--page);
+    font-size: 13px;
+  }
+  .modal-list .seq {
+    flex: none; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 11px; font-weight: 800; font-family: var(--font-mono);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-list .pieces { color: var(--ink-2); }
+  .modal-list .pieces b { color: var(--ink); font-family: var(--font-mono); font-weight: 700; }
+  .modal-list .pieces .natl-tag {
+    font-size: 10px; font-weight: 700; color: var(--accent);
+    border: 1px solid currentColor; border-radius: 4px; padding: 0 3px; margin-left: 2px;
+  }
+  .modal-list .total { margin-left: auto; flex: none; font-family: var(--font-mono); font-weight: 800; color: var(--good); font-size: 12.5px; }
+  .modal-leftover {
+    margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line-strong);
+    font-size: 12.5px; color: var(--ink-2);
+  }
+  .modal-leftover b { color: var(--ink); }
+  .modal-empty { font-size: 13px; color: var(--muted); padding: 8px 0; }
   td.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
   .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px; white-space: nowrap; }
@@ -361,6 +422,21 @@
   </footer>
 </div>
 
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3 id="modal-name"></h3>
+        <p class="modal-sub" id="modal-sub"></p>
+      </div>
+      <button class="modal-close" id="modal-close" type="button" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-summary" id="modal-summary"></div>
+    <ol class="modal-list" id="modal-list"></ol>
+    <div class="modal-leftover" id="modal-leftover"></div>
+  </div>
+</div>
+
 <script>
 (async function () {
   const players = await fetch('fa_league_summary.json').then(r => r.json());
@@ -433,7 +509,7 @@
       const faText = p.faRemaining === 0 ? '충족' : `${p.faRemaining}시즌`;
       return `
       <tr>
-        <td class="name">${p.name}<span class="team-tag">${p.team} · ${p.pos}</span></td>
+        <td class="name"><button class="name-btn" type="button" data-pid="${p.playerId}">${p.name}</button><span class="team-tag">${p.team} · ${p.pos}</span></td>
         <td><span class="badge ${p.type === 1 ? 'grad' : 'nongrad'}">${p.type === 1 ? '4년제 대졸' : '비대졸'}</span></td>
         <td class="mono num">${p.completed} / ${p.faThreshold}</td>
         <td class="num"><span class="fa-count ${faClass}">${faText}</span></td>
@@ -467,6 +543,73 @@
 
   teamSelect.addEventListener('change', () => { teamFilter = teamSelect.value; render(); });
   document.getElementById('name-search').addEventListener('input', (e) => { nameFilter = e.target.value.trim(); render(); });
+
+  // ---------- 선수 상세(산정 근거) 모달 ----------
+  const overlay = document.getElementById('modal-overlay');
+
+  function pieceLabel(piece) {
+    const tag = piece.kind === 'natl' ? '<span class="natl-tag">국가대표</span>' : '';
+    return `${piece.year}년 <b>${piece.days}일</b>${tag}`;
+  }
+
+  function openDetail(pid) {
+    const p = players.find(x => x.playerId === pid);
+    if (!p) return;
+    const d = p.detail || { seasons: [], leftover: [] };
+
+    document.getElementById('modal-name').textContent = p.name;
+    document.getElementById('modal-sub').textContent =
+      `${p.team} · ${p.pos} · ${p.type === 1 ? '4년제 대졸(FA 7시즌)' : '비대졸(FA 8시즌)'} · ${p.firstYear}~${p.lastYear}`;
+
+    document.getElementById('modal-summary').innerHTML = `
+      <span>완성 정규시즌 <b>${p.completed}</b> / ${p.faThreshold}</span>
+      <span>FA까지 <b>${p.faRemaining === 0 ? '충족' : p.faRemaining + '시즌'}</b></span>
+      <span>국가대표 보상일수 <b>${p.natlEarned}</b>일 획득 · <b>${p.natlUsed}</b>일 사용</span>
+    `;
+
+    if (d.seasons.length === 0) {
+      document.getElementById('modal-list').innerHTML = '<div class="modal-empty">완성된 정규시즌이 아직 없습니다.</div>';
+    } else {
+      document.getElementById('modal-list').innerHTML = d.seasons.map((e, i) => {
+        if (e.kind === 'standalone') {
+          return `
+            <li>
+              <span class="seq">${i + 1}</span>
+              <span class="pieces">${e.year}년 <b>${e.days}일</b> 단독 등록 (145일 이상)</span>
+            </li>`;
+        }
+        const parts = e.pieces.map(pieceLabel).join(' + ');
+        return `
+          <li>
+            <span class="seq">${i + 1}</span>
+            <span class="pieces">${parts} 조합</span>
+            <span class="total">= ${e.total}일</span>
+          </li>`;
+      }).join('');
+    }
+
+    const leftoverEl = document.getElementById('modal-leftover');
+    if (d.leftover && d.leftover.length > 0) {
+      const total = d.leftover.reduce((s, e) => s + e.days, 0);
+      leftoverEl.innerHTML = `아직 145일을 못 채운 미해결 조각(총 <b>${total}일</b>): ` +
+        d.leftover.map(pieceLabel).join(', ');
+      leftoverEl.style.display = '';
+    } else {
+      leftoverEl.style.display = 'none';
+    }
+
+    overlay.classList.add('open');
+  }
+
+  function closeDetail() { overlay.classList.remove('open'); }
+
+  document.getElementById('fa-body').addEventListener('click', (e) => {
+    const btn = e.target.closest('.name-btn');
+    if (btn) openDetail(btn.dataset.pid);
+  });
+  document.getElementById('modal-close').addEventListener('click', closeDetail);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDetail(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
 
   render();
 })();
