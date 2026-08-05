@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KBO FA 보상선수 시뮬레이터</title>
+</head>
+<body>
+<style>
+  :root {
+    --page:        #eef0f5;
+    --card:        #ffffff;
+    --header-navy: #0c1e3e;
+    --header-navy-2:#132a52;
+    --ink:         #0b1220;
+    --ink-2:       #4b5568;
+    --muted:       #8b93a3;
+    --line:        rgba(11,18,32,0.10);
+    --line-strong: rgba(11,18,32,0.18);
+    --accent:      #c8102e;
+    --accent-ink:  #ffffff;
+    --good:        #0ca30c;
+    --critical:    #d03b3b;
+    --warn-bg:     #fdf3e3;
+    --warn-tx:     #9a6b00;
+    --badge-gen-bg:#e7ebf3;
+    --badge-gen-tx:#0c1e3e;
+    --shadow:      0 1px 2px rgba(11,18,32,0.06), 0 8px 24px -12px rgba(11,18,32,0.18);
+    --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --control-bg:  #ffffff;
+    --control-tx:  #0b1220;
+    --protect-bg:  #eaf3ff;
+    --protect-tx:  #0b57a4;
+    --candidate-bg:#e9f9ec;
+    --candidate-tx:#0b7a2e;
+  }
+  :root[data-theme="dark"] {
+    --page:        #090d16;
+    --card:        #11182a;
+    --header-navy: #060f22;
+    --header-navy-2:#0c1e3e;
+    --ink:         #f2f4f8;
+    --ink-2:       #aab2c4;
+    --muted:       #767f92;
+    --line:        rgba(255,255,255,0.09);
+    --line-strong: rgba(255,255,255,0.16);
+    --accent:      #e0435c;
+    --accent-ink:  #ffffff;
+    --good:        #34c759;
+    --critical:    #e66767;
+    --warn-bg:     #3a2d10;
+    --warn-tx:     #f0c060;
+    --badge-gen-bg:#1b2740;
+    --badge-gen-tx:#c7d4ec;
+    --shadow:      0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --control-bg:  #182338;
+    --control-tx:  #f2f4f8;
+    --protect-bg:  #10233c;
+    --protect-tx:  #7cb6ee;
+    --candidate-bg:#0f2a17;
+    --candidate-tx:#6fd98d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page:        #090d16;
+      --card:        #11182a;
+      --header-navy: #060f22;
+      --header-navy-2:#0c1e3e;
+      --ink:         #f2f4f8;
+      --ink-2:       #aab2c4;
+      --muted:       #767f92;
+      --line:        rgba(255,255,255,0.09);
+      --line-strong: rgba(255,255,255,0.16);
+      --accent:      #e0435c;
+      --accent-ink:  #ffffff;
+      --good:        #34c759;
+      --critical:    #e66767;
+      --warn-bg:     #3a2d10;
+      --warn-tx:     #f0c060;
+      --badge-gen-bg:#1b2740;
+      --badge-gen-tx:#c7d4ec;
+      --shadow:      0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --control-bg:  #182338;
+      --control-tx:  #f2f4f8;
+      --protect-bg:  #10233c;
+      --protect-tx:  #7cb6ee;
+      --candidate-bg:#0f2a17;
+      --candidate-tx:#6fd98d;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px 64px; }
+
+  .hero {
+    position: relative;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 13px),
+      linear-gradient(160deg, var(--header-navy-2), var(--header-navy) 70%);
+    color: #f3f5fa;
+    padding: 28px 20px 30px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: ""; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 40%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 1060px; margin: 0 auto; position: relative; }
+  .chapter-nav { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .chapter-nav a {
+    color: #c3cbdc; font-size: 12.5px; font-weight: 700; text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 100px; padding: 5px 12px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chapter-nav a:hover { border-color: rgba(255,255,255,0.4); }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: #9aa4bb; margin: 0 0 6px; }
+  h1.page-title { font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 6px; }
+  .page-sub { font-size: 14px; color: #c3cbdc; margin: 0; max-width: 74ch; line-height: 1.6; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 20px 22px; margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 15px; font-weight: 800; margin: 0 0 14px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 .step-no {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 12px; font-weight: 800; font-family: var(--font-mono);
+  }
+  .card.dim { opacity: 0.4; pointer-events: none; }
+
+  .field-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 5px; min-width: 180px; flex: 1; }
+  .field label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  select, .fake-select {
+    appearance: none; background: var(--control-bg); color: var(--control-tx);
+    border: 1px solid var(--line-strong); border-radius: 7px; padding: 9px 32px 9px 12px;
+    font-size: 14px; font-weight: 600; font-family: var(--font-body); cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b93a3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .grade-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 8px; font-weight: 800; font-size: 15px;
+    font-family: var(--font-mono);
+  }
+  .grade-badge.A { background: color-mix(in srgb, var(--accent) 18%, var(--card)); color: var(--accent); }
+  .grade-badge.B { background: var(--warn-bg); color: var(--warn-tx); }
+  .grade-badge.C { background: var(--badge-gen-bg); color: var(--muted); }
+  .grade-badge.unknown { background: var(--badge-gen-bg); color: var(--muted); font-size: 11px; }
+
+  .player-summary {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+    background: var(--page); border-radius: 8px; margin-top: 12px;
+  }
+  .player-summary .psu-name { font-weight: 800; font-size: 16px; }
+  .player-summary .psu-meta { font-size: 12.5px; color: var(--ink-2); }
+
+  .radio-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .radio-opt {
+    flex: 1; min-width: 220px; border: 1.5px solid var(--line-strong); border-radius: 10px;
+    padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .radio-opt:hover { background: var(--page); }
+  .radio-opt.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--card)); }
+  .radio-opt .ro-title { font-weight: 700; font-size: 13.5px; margin-bottom: 3px; }
+  .radio-opt .ro-sub { font-size: 12px; color: var(--muted); }
+  .radio-opt input { display: none; }
+
+  .note-box {
+    font-size: 12px; color: var(--muted); background: var(--page); border-radius: 8px;
+    padding: 10px 12px; margin-top: 12px; line-height: 1.6;
+  }
+  .note-box b { color: var(--ink); }
+
+  .legend-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0 4px; font-size: 11.5px; color: var(--ink-2); }
+  .legend-row .lg-item { display: flex; align-items: center; gap: 5px; }
+  .legend-row .lg-swatch { width: 11px; height: 11px; border-radius: 3px; }
+
+  .roster-toolbar { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .roster-toolbar input[type="text"] {
+    background: var(--control-bg); color: var(--control-tx); border: 1px solid var(--line-strong);
+    border-radius: 7px; padding: 8px 12px; font-size: 13px; font-family: var(--font-body); min-width: 160px;
+  }
+  .roster-toolbar .protect-count { font-size: 12.5px; font-weight: 700; color: var(--protect-tx); }
+  .roster-toolbar .protect-count.full { color: var(--critical); }
+
+  .table-scroll { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; }
+  thead th {
+    position: sticky; top: 0; background: var(--card); text-align: left; font-size: 10.5px;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700;
+    padding: 10px 12px; border-bottom: 1px solid var(--line-strong); white-space: nowrap; z-index: 1;
+  }
+  thead th.num, td.num { text-align: right; }
+  thead th.center, td.center { text-align: center; }
+  td { padding: 7px 12px; font-size: 13px; vertical-align: middle; border-bottom: 1px solid var(--line); }
+  tbody tr:hover { background: var(--page); }
+  tbody tr.excluded { opacity: 0.42; }
+  tbody tr.protected-row { background: var(--protect-bg); }
+  tbody tr.candidate-row { background: var(--candidate-bg); }
+  td.name { font-weight: 700; }
+  td.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .excl-badge {
+    display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 7px;
+    border-radius: 100px; background: var(--badge-gen-bg); color: var(--muted); white-space: nowrap;
+  }
+  .chk { width: 16px; height: 16px; cursor: pointer; }
+  .manual-chip {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer;
+    padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line-strong); color: var(--ink-2);
+  }
+  .manual-chip input { width: 12px; height: 12px; }
+  .manual-chip.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+
+  .result-card { border-top: 3px solid var(--good); }
+  .result-empty { font-size: 13px; color: var(--muted); padding: 8px 0; }
+  .result-count { font-family: var(--font-mono); font-weight: 800; font-size: 22px; color: var(--good); }
+
+  footer.disclaimer {
+    max-width: 1060px; margin: 18px auto 0; font-size: 11.5px; line-height: 1.7; color: var(--muted);
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 0 4px 16px; }
+    .hero { padding: 9px 5px 8px; margin-bottom: 12px; }
+    .hero-inner { max-width: 100%; }
+    .card { padding: 12px 12px; margin-bottom: 10px; }
+    .field { min-width: 130px; }
+    thead th { font-size: 9.5px; padding: 5px 6px; }
+    td { font-size: 11.5px; padding: 4px 6px; }
+  }
+</style>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="chapter-nav">
+      <a href="chart.html">경쟁균형세(샐러리캡) 현황</a>
+      <a href="fa.html">FA 서비스타임 현황</a>
+    </div>
+    <p class="eyebrow">KBO FA 보상선수 시뮬레이터 &middot; <strong id="target-year-label">-</strong> FA 클래스</p>
+    <h1 class="page-title">보상선수 후보군 시뮬레이터</h1>
+    <p class="page-sub">
+      A/B등급 FA가 다른 구단으로 이적하면 원 소속구단은 이적구단으로부터 보상을 받습니다.
+      원소속구단이 "200% 보상금 + 보호선수 20인 외 1명"을 택하면, 이적구단(FA를 영입한 구단)
+      로스터에서 보호선수와 자동/수동 제외 대상을 뺀 나머지가 보상선수 후보가 됩니다.
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="card" id="step1">
+    <h2><span class="step-no">1</span>어떤 FA가 이적하나요?</h2>
+    <div class="field-row">
+      <div class="field">
+        <label for="origin-team">원소속구단 (FA를 잃는 구단)</label>
+        <select id="origin-team"></select>
+      </div>
+      <div class="field">
+        <label for="departing-player">이적하는 FA 선수</label>
+        <select id="departing-player"><option value="">-- 구단을 먼저 선택하세요 --</option></select>
+      </div>
+    </div>
+    <div class="player-summary" id="player-summary" style="display:none">
+      <span class="grade-badge" id="ps-grade-badge">-</span>
+      <div>
+        <div class="psu-name" id="ps-name"></div>
+        <div class="psu-meta" id="ps-meta"></div>
+      </div>
+    </div>
+    <div id="manual-grade-row" style="display:none" class="field-row" style="margin-top:12px">
+      <div class="field">
+        <label for="manual-grade">재자격 - 직전 FA 등급을 알고 계신가요?</label>
+        <select id="manual-grade">
+          <option value="">모름 - 직접 확인 필요</option>
+          <option value="B">B급 (직전 FA A 또는 B등급)</option>
+          <option value="C">C급 (직전 FA C등급, 또는 3회차 이상 FA)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card dim" id="step2">
+    <h2><span class="step-no">2</span>보상 방식 선택 (원소속구단이 선택)</h2>
+    <div class="radio-row" id="comp-choice-row">
+      <label class="radio-opt" data-choice="player">
+        <input type="radio" name="comp-choice" value="player">
+        <div class="ro-title">200% 보상금 + 보호선수 외 1명</div>
+        <div class="ro-sub">이적구단 로스터에서 보호선수 20인과 제외대상을 뺀 후보 중 1명 선택</div>
+      </label>
+      <label class="radio-opt" data-choice="cash">
+        <input type="radio" name="comp-choice" value="cash">
+        <div class="ro-title">300% 보상금 단독</div>
+        <div class="ro-sub">선수 보상 없이 현금만 수령</div>
+      </label>
+    </div>
+    <div class="note-box" id="comp-note"></div>
+  </div>
+
+  <div class="card dim" id="step3">
+    <h2><span class="step-no">3</span>이적구단 로스터에서 보호선수 20인 지정</h2>
+    <div class="field-row">
+      <div class="field">
+        <label for="dest-team">이적구단 (FA를 영입한 구단)</label>
+        <select id="dest-team"><option value="">-- 원소속구단과 다른 구단을 선택 --</option></select>
+      </div>
+    </div>
+    <div class="legend-row">
+      <span class="lg-item"><span class="lg-swatch" style="background:var(--protect-bg);border:1px solid var(--protect-tx)"></span>보호선수(20인)</span>
+      <span class="lg-item"><span class="lg-swatch" style="background:var(--candidate-bg);border:1px solid var(--candidate-tx)"></span>보상선수 후보</span>
+      <span class="lg-item"><span class="lg-swatch" style="background:var(--badge-gen-bg);opacity:.6"></span>자동 제외(회색)</span>
+    </div>
+    <div class="roster-toolbar">
+      <input type="text" id="roster-search" placeholder="선수명 검색">
+      <span class="protect-count" id="protect-count">보호선수 0/20</span>
+    </div>
+    <div class="table-scroll">
+      <table id="roster-table">
+        <thead>
+          <tr>
+            <th class="center">보호</th>
+            <th>선수명</th>
+            <th>포지션</th>
+            <th>레벨</th>
+            <th class="num">나이</th>
+            <th class="num">연봉(만원)</th>
+            <th>자동 제외 사유</th>
+            <th>수동 지정</th>
+          </tr>
+        </thead>
+        <tbody id="roster-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card dim result-card" id="step4">
+    <h2><span class="step-no">4</span>최종 보상선수 후보군</h2>
+    <div id="result-summary"></div>
+  </div>
+
+  <footer class="disclaimer">
+    ⚠ 근사치입니다. FA등급(A/B/C)은 최근 3년(<span id="fa-window-label"></span>) 연봉합계 기준
+    구단내·전체 순위로 자동 산정했습니다(신규자격 기준: A급=구단내 3위 이내 &amp; 전체 30위 이내,
+    B급=구단내 10위 이내 &amp; 전체 60위 이내, 35세 이상은 무조건 C급). 재자격(과거 FA 이력 보유)
+    선수는 직전 FA 등급 데이터가 없어 자동 산정하지 않고 직접 지정해야 합니다. 자동 제외 판정은
+    이동사유(임의해지/군보류)·최초등록연도·다년계약 현황 기준이며, <b>육성선수 여부·당해년도 FA
+    신분·당해년도 보상선수로 이적한 선수</b>는 데이터에 구분이 없어 표에서 직접 체크해야 합니다.
+    외국인/아시아쿼터 선수는 로스터 수집 단계에서부터 제외되어 있습니다. 보호선수 20인 지정은
+    실제 구단 발표 전까지 알 수 없으므로 직접 입력한 시나리오입니다.
+  </footer>
+</div>
+
+<script>
+(async function () {
+  const DATA = await fetch('comp_sim_data.json').then(r => r.json());
+  const players = DATA.players;
+  const targetYear = DATA.targetYear;
+  document.getElementById('target-year-label').textContent = targetYear + '년';
+  document.getElementById('fa-window-label').textContent = (targetYear - 3) + '~' + (targetYear - 1) + '년';
+
+  const byTeam = {};
+  for (const p of players) {
+    (byTeam[p.team] = byTeam[p.team] || []).push(p);
+  }
+  const teams = DATA.teams;
+
+  const originSel = document.getElementById('origin-team');
+  const departingSel = document.getElementById('departing-player');
+  const destSel = document.getElementById('dest-team');
+
+  function opt(value, label) {
+    const o = document.createElement('option');
+    o.value = value; o.textContent = label;
+    return o;
+  }
+
+  originSel.appendChild(opt('', '-- 선택 --'));
+  for (const t of teams) originSel.appendChild(opt(t, t));
+
+  const GRADE_LABEL = {
+    A: 'A급', B: 'B급', C: 'C급',
+    '재자격-등급확인필요': '재자격(등급 확인 필요)',
+    '해당없음(다년계약중)': null,
+  };
+
+  function eligibleDeparture(p) {
+    // FA 등급 시뮬레이터 대상: 다년계약 진행중(=이미 묶여있어 이적 불가)은 제외
+    return p.faGrade && p.faGrade !== '해당없음(다년계약중)';
+  }
+
+  let selectedPlayer = null;
+  let effectiveGrade = null; // 최종 확정 등급(A/B/C) - manual override 반영
+
+  originSel.addEventListener('change', () => {
+    departingSel.innerHTML = '';
+    departingSel.appendChild(opt('', '-- 선수 선택 --'));
+    const roster = (byTeam[originSel.value] || []).filter(eligibleDeparture)
+      .sort((a, b) => (b.salary_manwon || 0) - (a.salary_manwon || 0));
+    for (const p of roster) {
+      const label = `${p.name} (${GRADE_LABEL[p.faGrade] || p.faGrade}, ${p.salary_manwon.toLocaleString()}만원)`;
+      departingSel.appendChild(opt(p.playerId, label));
+    }
+    resetFrom(2);
+  });
+
+  departingSel.addEventListener('change', () => {
+    const pid = departingSel.value;
+    selectedPlayer = players.find(p => p.playerId === pid && p.team === originSel.value) || null;
+    renderPlayerSummary();
+    resetFrom(2);
+  });
+
+  function renderPlayerSummary() {
+    const box = document.getElementById('player-summary');
+    const manualRow = document.getElementById('manual-grade-row');
+    if (!selectedPlayer) { box.style.display = 'none'; manualRow.style.display = 'none'; return; }
+    box.style.display = 'flex';
+    const badge = document.getElementById('ps-grade-badge');
+    const isReeligibleUnknown = selectedPlayer.faGrade === '재자격-등급확인필요';
+    manualRow.style.display = isReeligibleUnknown ? 'flex' : 'none';
+
+    if (isReeligibleUnknown) {
+      const manual = document.getElementById('manual-grade').value;
+      effectiveGrade = manual || null;
+      badge.textContent = manual || '?';
+      badge.className = 'grade-badge ' + (manual || 'unknown');
+    } else {
+      effectiveGrade = selectedPlayer.faGrade;
+      badge.textContent = effectiveGrade;
+      badge.className = 'grade-badge ' + effectiveGrade;
+    }
+    document.getElementById('ps-name').textContent = selectedPlayer.name + ' (' + selectedPlayer.team + ')';
+    document.getElementById('ps-meta').textContent =
+      `${selectedPlayer.pos} · 나이 ${selectedPlayer.age ?? '?'} · ${selectedPlayer.salary_manwon.toLocaleString()}만원` +
+      (isReeligibleUnknown ? ' · 재자격 FA' : '');
+    setStepEnabled('step2', !!effectiveGrade);
+  }
+
+  document.getElementById('manual-grade').addEventListener('change', renderPlayerSummary);
+
+  function setStepEnabled(id, enabled) {
+    document.getElementById(id).classList.toggle('dim', !enabled);
+  }
+
+  function resetFrom(stepNum) {
+    if (stepNum <= 2) {
+      setStepEnabled('step2', false);
+      document.querySelectorAll('.radio-opt').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('input[name="comp-choice"]').forEach(el => el.checked = false);
+      document.getElementById('comp-note').textContent = '';
+    }
+    if (stepNum <= 3) {
+      setStepEnabled('step3', false);
+      destSel.innerHTML = '';
+      destSel.appendChild(opt('', '-- 원소속구단과 다른 구단을 선택 --'));
+      protectedIds.clear(); manualExclIds.clear();
+      document.getElementById('roster-body').innerHTML = '';
+    }
+    if (stepNum <= 4) {
+      setStepEnabled('step4', false);
+      document.getElementById('result-summary').innerHTML = '';
+    }
+  }
+
+  document.querySelectorAll('.radio-opt').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.radio-opt').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      el.querySelector('input').checked = true;
+      onCompChoice(el.dataset.choice);
+    });
+  });
+
+  function onCompChoice(choice) {
+    const note = document.getElementById('comp-note');
+    if (effectiveGrade === 'C') {
+      note.textContent = 'C급 FA는 보상 대상이 아닙니다(보상금·보상선수 모두 없음).';
+      setStepEnabled('step3', false);
+      resetFrom(3);
+      return;
+    }
+    if (choice === 'cash') {
+      note.textContent = '전년도 연봉의 300%를 현금으로만 수령합니다. 보상선수는 없습니다.';
+      setStepEnabled('step3', false);
+      resetFrom(3);
+    } else {
+      note.textContent = '전년도 연봉의 200% + 이적구단 보호선수 20인 외 1명을 보상선수로 지명합니다.';
+      setStepEnabled('step3', true);
+      teams.filter(t => t !== originSel.value).forEach(t => destSel.appendChild(opt(t, t)));
+    }
+  }
+
+  const protectedIds = new Set();
+  const manualExclIds = new Set(); // playerId -> Set of reason keys, but simplified to any-manual-exclude
+  const manualReasons = {}; // playerId -> {devPlayer, thisYearFA, thisYearCompAcquired}
+
+  destSel.addEventListener('change', () => {
+    protectedIds.clear();
+    for (const k in manualReasons) delete manualReasons[k];
+    renderRoster();
+  });
+
+  document.getElementById('roster-search').addEventListener('input', renderRoster);
+
+  function autoExclusionReason(p) {
+    if (p.excl.multiYearContract) return '다년계약 진행중';
+    if (p.excl.voluntaryRetired) return '임의해지';
+    if (p.excl.military) return '군보류/군복무';
+    if (p.excl.rookieThisYear) return `${targetYear}년 신인`;
+    return null;
+  }
+
+  function renderRoster() {
+    const tbody = document.getElementById('roster-body');
+    tbody.innerHTML = '';
+    if (!destSel.value) { updateResult(); return; }
+    const q = document.getElementById('roster-search').value.trim();
+    const roster = (byTeam[destSel.value] || [])
+      .slice()
+      .sort((a, b) => (b.salary_manwon || 0) - (a.salary_manwon || 0))
+      .filter(p => !q || p.name.includes(q));
+
+    for (const p of roster) {
+      const autoReason = autoExclusionReason(p);
+      const manual = manualReasons[p.playerId] || {};
+      const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
+      const isExcluded = !!autoReason || manualExcluded;
+      const isProtected = protectedIds.has(p.playerId);
+
+      const tr = document.createElement('tr');
+      tr.className = isExcluded ? 'excluded' : (isProtected ? 'protected-row' : 'candidate-row');
+
+      const tdChk = document.createElement('td');
+      tdChk.className = 'center';
+      if (!isExcluded) {
+        const chk = document.createElement('input');
+        chk.type = 'checkbox'; chk.className = 'chk';
+        chk.checked = isProtected;
+        chk.addEventListener('change', () => {
+          if (chk.checked) {
+            if (protectedIds.size >= 20) { chk.checked = false; return; }
+            protectedIds.add(p.playerId);
+          } else {
+            protectedIds.delete(p.playerId);
+          }
+          renderRoster();
+        });
+        tdChk.appendChild(chk);
+      }
+      tr.appendChild(tdChk);
+
+      const tdName = document.createElement('td');
+      tdName.className = 'name'; tdName.textContent = p.name;
+      tr.appendChild(tdName);
+
+      const tdPos = document.createElement('td'); tdPos.textContent = p.pos; tr.appendChild(tdPos);
+      const tdLvl = document.createElement('td'); tdLvl.textContent = p.level; tr.appendChild(tdLvl);
+      const tdAge = document.createElement('td'); tdAge.className = 'num mono'; tdAge.textContent = p.age ?? '-'; tr.appendChild(tdAge);
+      const tdSal = document.createElement('td'); tdSal.className = 'num mono'; tdSal.textContent = p.salary_manwon.toLocaleString(); tr.appendChild(tdSal);
+
+      const tdReason = document.createElement('td');
+      if (autoReason) {
+        const b = document.createElement('span');
+        b.className = 'excl-badge'; b.textContent = autoReason;
+        tdReason.appendChild(b);
+      }
+      tr.appendChild(tdReason);
+
+      const tdManual = document.createElement('td');
+      tdManual.appendChild(manualChip(p.playerId, 'devPlayer', '육성선수', manual.devPlayer));
+      tdManual.appendChild(manualChip(p.playerId, 'thisYearFA', `${targetYear}FA`, manual.thisYearFA));
+      tdManual.appendChild(manualChip(p.playerId, 'thisYearCompAcquired', '당해보상이적', manual.thisYearCompAcquired));
+      tr.appendChild(tdManual);
+
+      tbody.appendChild(tr);
+    }
+    updateResult();
+  }
+
+  function manualChip(pid, key, label, checked) {
+    const wrap = document.createElement('label');
+    wrap.className = 'manual-chip' + (checked ? ' on' : '');
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.checked = !!checked;
+    chk.addEventListener('change', () => {
+      manualReasons[pid] = manualReasons[pid] || {};
+      manualReasons[pid][key] = chk.checked;
+      if (chk.checked) protectedIds.delete(pid);
+      renderRoster();
+    });
+    wrap.appendChild(chk);
+    wrap.appendChild(document.createTextNode(label));
+    return wrap;
+  }
+
+  function updateResult() {
+    document.getElementById('protect-count').textContent = `보호선수 ${protectedIds.size}/20`;
+    document.getElementById('protect-count').classList.toggle('full', protectedIds.size >= 20);
+
+    const resultBox = document.getElementById('result-summary');
+    if (!destSel.value) { setStepEnabled('step4', false); resultBox.innerHTML = ''; return; }
+
+    const roster = byTeam[destSel.value] || [];
+    const candidates = roster.filter(p => {
+      if (autoExclusionReason(p)) return false;
+      const m = manualReasons[p.playerId] || {};
+      if (m.devPlayer || m.thisYearFA || m.thisYearCompAcquired) return false;
+      if (protectedIds.has(p.playerId)) return false;
+      return true;
+    }).sort((a, b) => (b.salary_manwon || 0) - (a.salary_manwon || 0));
+
+    setStepEnabled('step4', true);
+    if (candidates.length === 0) {
+      resultBox.innerHTML = '<div class="result-empty">현재 조건으로는 후보가 없습니다 - 보호선수를 줄이거나 검색 조건을 확인하세요.</div>';
+      return;
+    }
+    let html = `<div class="result-count">${candidates.length}명</div>`
+      + `<div class="result-empty" style="margin-bottom:10px">${destSel.value} 로스터 중 보상선수로 지명 가능한 인원</div>`
+      + '<div class="table-scroll" style="max-height:40vh"><table><thead><tr>'
+      + '<th>선수명</th><th>포지션</th><th>레벨</th><th class="num">나이</th><th class="num">연봉(만원)</th>'
+      + '</tr></thead><tbody>';
+    for (const p of candidates) {
+      html += `<tr><td class="name">${p.name}</td><td>${p.pos}</td><td>${p.level}</td>`
+        + `<td class="num mono">${p.age ?? '-'}</td><td class="num mono">${p.salary_manwon.toLocaleString()}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+    resultBox.innerHTML = html;
+  }
+
+  resetFrom(2);
+})();
+</script>
+
+</body>
+</html>
