@@ -540,7 +540,17 @@
     } else {
       note.textContent = '전년도 연봉의 200% + 이적구단 보호선수 20인 외 1명을 보상선수로 지명합니다.';
       setStepEnabled('step3', true);
+      // destSel을 매번 새로 채우기 전에 비워야 한다 - 안 그러면 라디오를
+      // 다시 클릭하거나 현금<->선수를 오갈 때마다 팀 목록이 계속 누적돼
+      // 중복으로 쌓인다(사용자가 실제로 겪은 버그: 드롭다운에 구단이 18개
+      // 나타남). 현재 선택값은 살려서 다시 채운 뒤 복원한다.
+      const prevDest = destSel.value;
+      destSel.innerHTML = '';
+      destSel.appendChild(opt('', '-- 원소속구단과 다른 구단을 선택 --'));
       teams.filter(t => t !== originSel.value).forEach(t => destSel.appendChild(opt(t, t)));
+      if (prevDest && teams.includes(prevDest) && prevDest !== originSel.value) {
+        destSel.value = prevDest;
+      }
     }
   }
 
