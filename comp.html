@@ -340,6 +340,25 @@
     </div>
     <div class="roster-toolbar">
       <input type="text" id="roster-search" placeholder="선수명 검색">
+      <select id="tier-filter">
+        <option value="">전체 티어</option>
+        <option value="tier-core">핵심(1~10위)</option>
+        <option value="tier-regular">레귤러(11~15위)</option>
+        <option value="tier-fringe">주전가능(16~20위)</option>
+        <option value="tier-ext">25인확장(21~25위)</option>
+        <option value="below25">26위 이하</option>
+      </select>
+      <select id="pos-filter">
+        <option value="">전체 포지션</option>
+        <option value="투수">투수</option>
+        <option value="타자">타자</option>
+      </select>
+      <label class="manual-chip" style="cursor:pointer">
+        <input type="checkbox" id="hide-excluded-toggle">제외선수 숨기기
+      </label>
+      <label class="manual-chip" style="cursor:pointer">
+        <input type="checkbox" id="candidates-only-toggle">현재 후보만 보기
+      </label>
       <span class="protect-count" id="protect-count">보호선수 0/20</span>
     </div>
     <div class="table-scroll">
@@ -543,6 +562,10 @@
   });
 
   document.getElementById('roster-search').addEventListener('input', renderRoster);
+  document.getElementById('tier-filter').addEventListener('change', renderRoster);
+  document.getElementById('pos-filter').addEventListener('change', renderRoster);
+  document.getElementById('hide-excluded-toggle').addEventListener('change', renderRoster);
+  document.getElementById('candidates-only-toggle').addEventListener('change', renderRoster);
 
   function autoExclusionReason(p) {
     // 다년계약 "진행중"이라는 사실 자체는 제외 사유가 아니다(2026-08-05
@@ -560,11 +583,15 @@
     tbody.innerHTML = '';
     if (!destSel.value) { updateResult(); return; }
     const q = document.getElementById('roster-search').value.trim();
+    const tierFilter = document.getElementById('tier-filter').value;
+    const posFilter = document.getElementById('pos-filter').value;
+    const hideExcluded = document.getElementById('hide-excluded-toggle').checked;
+    const candidatesOnly = document.getElementById('candidates-only-toggle').checked;
+
     const rosterFull = (byTeam[destSel.value] || [])
       .slice()
       .sort((a, b) => (b.salary_manwon || 0) - (a.salary_manwon || 0));
     const rankOf = new Map(rosterFull.map((p, i) => [p.playerId, i + 1]));
-    const roster = rosterFull.filter(p => !q || p.name.includes(q));
 
     // 보호선수 티어 구분(사용자 확인, 2026-08-05): 상위10(구단 핵심전력),
     // 11~15(1군 레귤러지만 top10엔 밀림), 16~20(주전 출장 가능). 25인 한도인
@@ -576,6 +603,23 @@
       if (rank <= 25) return { label: '25인 확장', cls: 'tier-ext' };
       return null;
     }
+
+    const roster = rosterFull.filter(p => {
+      if (q && !p.name.includes(q)) return false;
+      if (posFilter && p.pos !== posFilter) return false;
+      if (tierFilter) {
+        const rank = rankOf.get(p.playerId);
+        if (tierFilter === 'below25') { if (rank <= 25) return false; }
+        else if (!tierOf(rank) || tierOf(rank).cls !== tierFilter) return false;
+      }
+      const autoReason = autoExclusionReason(p);
+      const manual = manualReasons[p.playerId] || {};
+      const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
+      const isExcluded = !!autoReason || manualExcluded;
+      if (hideExcluded && isExcluded) return false;
+      if (candidatesOnly && (isExcluded || protectedIds.has(p.playerId))) return false;
+      return true;
+    });
 
     for (const p of roster) {
       const autoReason = autoExclusionReason(p);
