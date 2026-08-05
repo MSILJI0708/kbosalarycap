@@ -455,7 +455,10 @@
     setStepEnabled('step2', !!effectiveGrade);
   }
 
-  document.getElementById('manual-grade').addEventListener('change', renderPlayerSummary);
+  document.getElementById('manual-grade').addEventListener('change', () => {
+    resetFrom(2);
+    renderPlayerSummary();
+  });
 
   function setStepEnabled(id, enabled) {
     document.getElementById(id).classList.toggle('dim', !enabled);
