@@ -223,6 +223,14 @@
     display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 7px;
     border-radius: 100px; background: var(--badge-gen-bg); color: var(--muted); white-space: nowrap;
   }
+  .tier-badge {
+    display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 7px;
+    border-radius: 100px; white-space: nowrap;
+  }
+  .tier-badge.tier-core    { background: color-mix(in srgb, var(--accent) 16%, var(--card)); color: var(--accent); }
+  .tier-badge.tier-regular { background: var(--warn-bg); color: var(--warn-tx); }
+  .tier-badge.tier-fringe  { background: var(--badge-gen-bg); color: var(--badge-gen-tx); }
+  .tier-badge.tier-ext     { background: var(--page); color: var(--muted); border: 1px dashed var(--line-strong); }
   .chk { width: 16px; height: 16px; cursor: pointer; }
   .manual-chip {
     display: inline-flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer;
@@ -260,8 +268,9 @@
     <h1 class="page-title">보상선수 후보군 시뮬레이터</h1>
     <p class="page-sub">
       A/B등급 FA가 다른 구단으로 이적하면 원 소속구단은 이적구단으로부터 보상을 받습니다.
-      원소속구단이 "200% 보상금 + 보호선수 20인 외 1명"을 택하면, 이적구단(FA를 영입한 구단)
-      로스터에서 보호선수와 자동/수동 제외 대상을 뺀 나머지가 보상선수 후보가 됩니다.
+      원소속구단이 "200% 보상금 + 보호선수 외 1명"을 택하면(보호선수는 A등급 이적 시 20인,
+      B등급 이적 시 25인까지), 이적구단(FA를 영입한 구단) 로스터에서 보호선수와 자동/수동
+      제외 대상을 뺀 나머지가 보상선수 후보가 됩니다.
     </p>
   </div>
 </div>
@@ -305,7 +314,7 @@
       <label class="radio-opt" data-choice="player">
         <input type="radio" name="comp-choice" value="player">
         <div class="ro-title">200% 보상금 + 보호선수 외 1명</div>
-        <div class="ro-sub">이적구단 로스터에서 보호선수 20인과 제외대상을 뺀 후보 중 1명 선택</div>
+        <div class="ro-sub">이적구단 로스터에서 보호선수(A급 20인/B급 25인)와 제외대상을 뺀 후보 중 1명 선택</div>
       </label>
       <label class="radio-opt" data-choice="cash">
         <input type="radio" name="comp-choice" value="cash">
@@ -317,7 +326,7 @@
   </div>
 
   <div class="card dim" id="step3">
-    <h2><span class="step-no">3</span>이적구단 로스터에서 보호선수 20인 지정</h2>
+    <h2><span class="step-no">3</span>이적구단 로스터에서 보호선수 지정 <span id="step3-cap-label" style="font-weight:400;color:var(--muted);font-size:12.5px"></span></h2>
     <div class="field-row">
       <div class="field">
         <label for="dest-team">이적구단 (FA를 영입한 구단)</label>
@@ -338,6 +347,7 @@
         <thead>
           <tr>
             <th class="center">보호</th>
+            <th class="num">순위</th>
             <th>선수명</th>
             <th>포지션</th>
             <th>레벨</th>
@@ -403,8 +413,11 @@
   };
 
   function eligibleDeparture(p) {
-    // FA 등급 시뮬레이터 대상: 다년계약 진행중(=이미 묶여있어 이적 불가)은 제외
-    return p.faGrade && p.faGrade !== '해당없음(다년계약중)';
+    // 실제로 그 해 자유계약이 되는 선수만 (fa_grade.csv의 FA2027후보 플래그 -
+    // 계약종료가 TARGET_YEAR-1인 선수 + 서비스타임 기준 신규자격 + 옵션/
+    // 옵트아웃 미실행 가정 수동추가). 예전엔 "다년계약중이 아닌 모든 선수"를
+    // 다 보여줘서 그냥 연봉 높은 현역 선수까지 섞여 나왔음.
+    return p.fa2027Candidate;
   }
 
   let selectedPlayer = null;
@@ -512,6 +525,12 @@
     }
   }
 
+  function protectionCap() {
+    // A등급 FA 이적 시 보호선수 20인, B등급은 25인까지 (사용자 확인,
+    // 2026-08-05). C등급은 애초에 보상 자체가 없어 이 화면까지 오지 않음.
+    return effectiveGrade === 'B' ? 25 : 20;
+  }
+
   const protectedIds = new Set();
   const manualExclIds = new Set(); // playerId -> Set of reason keys, but simplified to any-manual-exclude
   const manualReasons = {}; // playerId -> {devPlayer, thisYearFA, thisYearCompAcquired}
@@ -519,13 +538,17 @@
   destSel.addEventListener('change', () => {
     protectedIds.clear();
     for (const k in manualReasons) delete manualReasons[k];
+    document.getElementById('step3-cap-label').textContent = `(${effectiveGrade}등급 이적 - 최대 ${protectionCap()}인)`;
     renderRoster();
   });
 
   document.getElementById('roster-search').addEventListener('input', renderRoster);
 
   function autoExclusionReason(p) {
-    if (p.excl.multiYearContract) return '다년계약 진행중';
+    // 다년계약 "진행중"이라는 사실 자체는 제외 사유가 아니다(2026-08-05
+    // 사용자 정정) - 비FA 다년계약은 전혀 해당 없고, FA 다년계약도 "그 해에
+    // 체결"한 경우만 제외된다.
+    if (p.excl.signedFAThisYear) return `${targetYear}년 FA 체결`;
     if (p.excl.voluntaryRetired) return '임의해지';
     if (p.excl.military) return '군보류/군복무';
     if (p.excl.rookieThisYear) return `${targetYear}년 신인`;
@@ -537,10 +560,22 @@
     tbody.innerHTML = '';
     if (!destSel.value) { updateResult(); return; }
     const q = document.getElementById('roster-search').value.trim();
-    const roster = (byTeam[destSel.value] || [])
+    const rosterFull = (byTeam[destSel.value] || [])
       .slice()
-      .sort((a, b) => (b.salary_manwon || 0) - (a.salary_manwon || 0))
-      .filter(p => !q || p.name.includes(q));
+      .sort((a, b) => (b.salary_manwon || 0) - (a.salary_manwon || 0));
+    const rankOf = new Map(rosterFull.map((p, i) => [p.playerId, i + 1]));
+    const roster = rosterFull.filter(p => !q || p.name.includes(q));
+
+    // 보호선수 티어 구분(사용자 확인, 2026-08-05): 상위10(구단 핵심전력),
+    // 11~15(1군 레귤러지만 top10엔 밀림), 16~20(주전 출장 가능). 25인 한도인
+    // B등급 이적 시엔 21~25를 4번째 티어로 그대로 이어 붙인다.
+    function tierOf(rank) {
+      if (rank <= 10) return { label: '핵심', cls: 'tier-core' };
+      if (rank <= 15) return { label: '레귤러', cls: 'tier-regular' };
+      if (rank <= 20) return { label: '주전가능', cls: 'tier-fringe' };
+      if (rank <= 25) return { label: '25인 확장', cls: 'tier-ext' };
+      return null;
+    }
 
     for (const p of roster) {
       const autoReason = autoExclusionReason(p);
@@ -548,9 +583,22 @@
       const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
       const isExcluded = !!autoReason || manualExcluded;
       const isProtected = protectedIds.has(p.playerId);
+      const rank = rankOf.get(p.playerId);
 
       const tr = document.createElement('tr');
       tr.className = isExcluded ? 'excluded' : (isProtected ? 'protected-row' : 'candidate-row');
+
+      const tdRank = document.createElement('td');
+      tdRank.className = 'num mono';
+      const tier = tierOf(rank);
+      if (tier) {
+        const b = document.createElement('span');
+        b.className = 'tier-badge ' + tier.cls;
+        b.textContent = rank + ' · ' + tier.label;
+        tdRank.appendChild(b);
+      } else {
+        tdRank.textContent = rank;
+      }
 
       const tdChk = document.createElement('td');
       tdChk.className = 'center';
@@ -560,7 +608,7 @@
         chk.checked = isProtected;
         chk.addEventListener('change', () => {
           if (chk.checked) {
-            if (protectedIds.size >= 20) { chk.checked = false; return; }
+            if (protectedIds.size >= protectionCap()) { chk.checked = false; return; }
             protectedIds.add(p.playerId);
           } else {
             protectedIds.delete(p.playerId);
@@ -570,6 +618,7 @@
         tdChk.appendChild(chk);
       }
       tr.appendChild(tdChk);
+      tr.appendChild(tdRank);
 
       const tdName = document.createElement('td');
       tdName.className = 'name'; tdName.textContent = p.name;
@@ -616,8 +665,8 @@
   }
 
   function updateResult() {
-    document.getElementById('protect-count').textContent = `보호선수 ${protectedIds.size}/20`;
-    document.getElementById('protect-count').classList.toggle('full', protectedIds.size >= 20);
+    document.getElementById('protect-count').textContent = `보호선수 ${protectedIds.size}/${protectionCap()}`;
+    document.getElementById('protect-count').classList.toggle('full', protectedIds.size >= protectionCap());
 
     const resultBox = document.getElementById('result-summary');
     if (!destSel.value) { setStepEnabled('step4', false); resultBox.innerHTML = ''; return; }
