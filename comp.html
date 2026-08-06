@@ -203,7 +203,7 @@
   .roster-toolbar .protect-count.full { color: var(--critical); }
 
   .table-scroll { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 10px; }
-  table { border-collapse: collapse; width: 100%; min-width: 720px; }
+  table { border-collapse: collapse; width: 100%; min-width: 980px; }
   thead th {
     position: sticky; top: 0; background: var(--card); text-align: left; font-size: 10.5px;
     letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700;
@@ -350,8 +350,28 @@
       </select>
       <select id="pos-filter">
         <option value="">전체 포지션</option>
-        <option value="투수">투수</option>
-        <option value="타자">타자</option>
+        <option value="투">투수</option>
+        <option value="포">포수</option>
+        <option value="내">내야수</option>
+        <option value="외">외야수</option>
+      </select>
+      <select id="tenure-filter">
+        <option value="">전체 소속연차</option>
+        <option value="0-3">3년 이하</option>
+        <option value="4-7">4~7년</option>
+        <option value="8-99">8년 이상</option>
+      </select>
+      <select id="military-filter">
+        <option value="">전체 병역</option>
+        <option value="done">군필/면제</option>
+        <option value="serving">복무중</option>
+        <option value="unknown">정보없음</option>
+      </select>
+      <select id="usage-filter">
+        <option value="">전체 출전</option>
+        <option value="mlb">올해 1군 출전 있음</option>
+        <option value="milbOnly">올해 2군 위주(1군 기록 없음)</option>
+        <option value="none">올해 출전 기록 없음</option>
       </select>
       <label class="manual-chip" style="cursor:pointer">
         <input type="checkbox" id="hide-excluded-toggle">제외선수 숨기기
@@ -371,7 +391,10 @@
             <th>포지션</th>
             <th>레벨</th>
             <th class="num">나이</th>
+            <th class="num">소속연차</th>
             <th class="num">연봉(만원)</th>
+            <th>병역</th>
+            <th>올해 성적</th>
             <th>자동 제외 사유</th>
             <th>수동 지정</th>
           </tr>
@@ -394,7 +417,11 @@
     이동사유(임의해지/군보류)·최초등록연도·다년계약 현황 기준이며, <b>육성선수 여부·당해년도 FA
     신분·당해년도 보상선수로 이적한 선수</b>는 데이터에 구분이 없어 표에서 직접 체크해야 합니다.
     외국인/아시아쿼터 선수는 로스터 수집 단계에서부터 제외되어 있습니다. 보호선수 20인 지정은
-    실제 구단 발표 전까지 알 수 없으므로 직접 입력한 시나리오입니다.
+    실제 구단 발표 전까지 알 수 없으므로 직접 입력한 시나리오입니다. 병역/올해 성적/통산 경험치는
+    KBO 기록실·나무위키에서 자동 수집한 참고정보입니다 - 병역은 나무위키 인포박스에 문서가 없거나
+    동명이인으로 특정이 안 되면 "정보없음"으로 남깁니다(오탐 방지를 위해 팀명이 문서에 없으면
+    버림). 2군 타석수는 (타수+볼넷+사구)로 근사한 값이라 희생타/희생플라이만큼 실제보다 약간
+    적을 수 있습니다.
   </footer>
 </div>
 
@@ -574,8 +601,59 @@
   document.getElementById('roster-search').addEventListener('input', renderRoster);
   document.getElementById('tier-filter').addEventListener('change', renderRoster);
   document.getElementById('pos-filter').addEventListener('change', renderRoster);
+  document.getElementById('tenure-filter').addEventListener('change', renderRoster);
+  document.getElementById('military-filter').addEventListener('change', renderRoster);
+  document.getElementById('usage-filter').addEventListener('change', renderRoster);
   document.getElementById('hide-excluded-toggle').addEventListener('change', renderRoster);
   document.getElementById('candidates-only-toggle').addEventListener('change', renderRoster);
+
+  // 병역상태 원문(나무위키 인포박스 텍스트, scrape_military_status.py)을
+  // 대략 3버킷으로 분류. "복무중" 판정은 구단 공식 데이터(이동사유=군보류,
+  // excl.military)를 최우선으로 쓰고, 그 다음에만 나무위키 텍스트의
+  // 완료 표현(전역/만기/소집해제/면제 등)으로 "군필"을 추정한다. 그 외엔
+  // 정보없음 - 오판보다 "모른다"가 안전하다는 이 프로젝트의 기존 방침.
+  const MILITARY_DONE_RE = /전역|만기|소집해제|면제|제대/;
+  function militaryBucket(p) {
+    if (p.excl.military) return 'serving';
+    if (!p.military) return 'unknown';
+    if (MILITARY_DONE_RE.test(p.military)) return 'done';
+    return 'serving';
+  }
+  const MILITARY_LABEL = { done: '군필/면제', serving: '복무중', unknown: '정보없음' };
+
+  function usageBucket(p) {
+    const mlb = p.mlbStats || {};
+    const milb = p.milbStats || {};
+    const mlbPlayed = (mlb.pa ?? mlb.ip ?? 0) > 0;
+    const milbPlayed = (milb.pa ?? milb.ip ?? 0) > 0;
+    if (mlbPlayed) return 'mlb';
+    if (milbPlayed) return 'milbOnly';
+    return 'none';
+  }
+
+  function statsSummary(p) {
+    const isPitcher = p.pos === '투수';
+    const mlb = p.mlbStats || {}, milb = p.milbStats || {};
+    const mlbPlayed = isPitcher ? (mlb.ip ?? 0) > 0 : (mlb.pa ?? 0) > 0;
+    const milbPlayed = isPitcher ? (milb.ip ?? 0) > 0 : (milb.pa ?? 0) > 0;
+    if (!mlbPlayed && !milbPlayed) return { text: '기록없음', title: '' };
+    const line = (lvl, s) => isPitcher
+      ? `${lvl} ${s.ip ?? 0}이닝 ERA${s.era ?? '-'} 삼진${s.so ?? 0} 볼넷${s.bb ?? 0}`
+      : `${lvl} 타석${s.pa ?? 0} 타율${s.avg ?? '-'} OPS${s.ops ?? '-'} 삼진${s.so ?? 0}`;
+    const parts = [];
+    if (mlbPlayed) parts.push(line('1군', mlb));
+    if (milbPlayed) parts.push(line('2군', milb));
+    const ce = p.careerExperience || {};
+    const ceText = isPitcher
+      ? `통산 1군 ${ce.ip ?? '?'}이닝(타자수 ${ce.tbf ?? '?'})`
+      : `통산 1군 타석 ${ce.pa ?? '?'}`;
+    const contractText = p.contract
+      ? `다년계약 ${p.contract.startYear}~${p.contract.endYear}(${p.contract.totalYears}년 ${p.contract.totalEok}억)`
+      : '다년계약 없음';
+    const title = [...parts, ceText,
+      `FA까지 ${p.faRemaining ?? '?'}시즌`, contractText].filter(Boolean).join(' / ');
+    return { text: parts[0] || line(milbPlayed ? '2군' : '1군', milbPlayed ? milb : mlb), title };
+  }
 
   function autoExclusionReason(p) {
     // 다년계약 "진행중"이라는 사실 자체는 제외 사유가 아니다(2026-08-05
@@ -595,6 +673,9 @@
     const q = document.getElementById('roster-search').value.trim();
     const tierFilter = document.getElementById('tier-filter').value;
     const posFilter = document.getElementById('pos-filter').value;
+    const tenureFilter = document.getElementById('tenure-filter').value;
+    const militaryFilter = document.getElementById('military-filter').value;
+    const usageFilter = document.getElementById('usage-filter').value;
     const hideExcluded = document.getElementById('hide-excluded-toggle').checked;
     const candidatesOnly = document.getElementById('candidates-only-toggle').checked;
 
@@ -616,12 +697,19 @@
 
     const roster = rosterFull.filter(p => {
       if (q && !p.name.includes(q)) return false;
-      if (posFilter && p.pos !== posFilter) return false;
+      if (posFilter && p.posDetail !== posFilter) return false;
       if (tierFilter) {
         const rank = rankOf.get(p.playerId);
         if (tierFilter === 'below25') { if (rank <= 25) return false; }
         else if (!tierOf(rank) || tierOf(rank).cls !== tierFilter) return false;
       }
+      if (tenureFilter) {
+        const [lo, hi] = tenureFilter.split('-').map(Number);
+        const t = p.tenureYears ?? -1;
+        if (t < lo || t > hi) return false;
+      }
+      if (militaryFilter && militaryBucket(p) !== militaryFilter) return false;
+      if (usageFilter && usageBucket(p) !== usageFilter) return false;
       const autoReason = autoExclusionReason(p);
       const manual = manualReasons[p.playerId] || {};
       const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
@@ -678,10 +766,23 @@
       tdName.className = 'name'; tdName.textContent = p.name;
       tr.appendChild(tdName);
 
-      const tdPos = document.createElement('td'); tdPos.textContent = p.pos; tr.appendChild(tdPos);
+      const tdPos = document.createElement('td'); tdPos.textContent = p.posDetail ? `${p.pos}(${p.posDetail})` : p.pos; tr.appendChild(tdPos);
       const tdLvl = document.createElement('td'); tdLvl.textContent = p.level; tr.appendChild(tdLvl);
       const tdAge = document.createElement('td'); tdAge.className = 'num mono'; tdAge.textContent = p.age ?? '-'; tr.appendChild(tdAge);
+      const tdTenure = document.createElement('td'); tdTenure.className = 'num mono'; tdTenure.textContent = p.tenureYears ?? '-'; tr.appendChild(tdTenure);
       const tdSal = document.createElement('td'); tdSal.className = 'num mono'; tdSal.textContent = p.salary_manwon.toLocaleString(); tr.appendChild(tdSal);
+
+      const tdMil = document.createElement('td');
+      const milBucket = militaryBucket(p);
+      tdMil.textContent = MILITARY_LABEL[milBucket];
+      if (p.military) tdMil.title = p.military;
+      tr.appendChild(tdMil);
+
+      const tdStats = document.createElement('td');
+      const stats = statsSummary(p);
+      tdStats.textContent = stats.text;
+      if (stats.title) tdStats.title = stats.title;
+      tr.appendChild(tdStats);
 
       const tdReason = document.createElement('td');
       if (autoReason) {
