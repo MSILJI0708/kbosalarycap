@@ -406,9 +406,11 @@
             <th>레벨</th>
             <th class="num">나이</th>
             <th class="num">소속연차</th>
+            <th class="num">FA까지</th>
             <th class="num">연봉(만원)</th>
             <th>병역</th>
-            <th>올해 성적</th>
+            <th>1군 성적</th>
+            <th>2군 성적</th>
             <th>보호 사유</th>
             <th>자동 제외 사유</th>
             <th>수동 지정</th>
@@ -438,6 +440,11 @@
     확인하고, 그래도 못 찾으면(29세 이하 + 이동 이력 없음) "미필"로 간주합니다. 군보류 이동 이력만
     있고 상무/경찰 여부가 특정 안 되면 "군필"로만 표시하고 유형은 밝히지 않습니다. 2군 타석수는
     (타수+볼넷+사구)로 근사한 값이라 희생타/희생플라이만큼 실제보다 약간 적을 수 있습니다.
+    "보호 사유"·"추천 보호선수 자동 선택"·"추천 TOP 5"는 나이·올해 기회/성과·FA잔여시즌·포지션
+    뎁스를 조합한 규칙 기반 점수이지 AI 판단이 아닙니다. 성적이 떨어져도 프랜차이즈 상징성·팬덤
+    때문에 사실상 보호가 강제되는 선수(예: 은퇴 임박 원클럽맨, 레전드급 선수)는 정량 지표로
+    가려낼 수 없어 자동 채점 대상에서 빠져 있으므로, "팬심보호" 체크박스로 직접 지정해야 합니다
+    (지정 시 점수와 무관하게 20/25인 쿼터에서 우선 확보됩니다).
   </footer>
 </div>
 
@@ -695,6 +702,9 @@
     if (isAutoProtectedFA(p)) {
       return '당해년도 FA 자격 취득 예정 - 보호선수 20/25인 쿼터와 무관하게 자동 보호(보상선수 후보 자체가 될 수 없음)';
     }
+    if ((manualReasons[p.playerId] || {}).franchiseIcon) {
+      return '프랜차이즈/팬심 요인으로 사용자가 직접 지정 - 성적·연차 등 정량 지표와 무관(20/25인 쿼터 소진)';
+    }
     const tags = reasonTags(p, depthCounts);
     return tags.length ? tags.join(' · ') : '사용자 직접 지정(특별한 자동 산출 근거 없음)';
   }
@@ -719,26 +729,40 @@
     if (!destSel.value) return;
     const roster = byTeam[destSel.value] || [];
     const depthCounts = computeTeamDepth(roster);
+
+    // 팬심보호로 이미 지정해 둔 선수는 점수와 무관하게 자리를 먼저 확보한다
+    // (2026-08-06 사용자 요청 - 오승환 사례처럼 정량 지표로 못 가르는
+    // 선수는 사람이 지정하면 추천 로직이 이를 덮어쓰면 안 됨).
+    const franchiseIds = roster
+      .filter(p => !autoExclusionReason(p) && (manualReasons[p.playerId] || {}).franchiseIcon)
+      .map(p => p.playerId);
+
     const eligible = roster.filter(p => {
       const autoReason = autoExclusionReason(p);
       const manual = manualReasons[p.playerId] || {};
       const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
       // 당해년도 FA 예정 선수는 무조건 자동 보호라 20/25인 쿼터를 쓸 필요가
       // 없다 - 추천 대상 풀에서 애초에 빼서 쿼터를 낭비하지 않게 한다.
-      return !autoReason && !manualExcluded && !isAutoProtectedFA(p);
+      // 팬심보호 지정 선수도 이미 자리를 확보했으니 점수 계산에서 제외한다.
+      return !autoReason && !manualExcluded && !isAutoProtectedFA(p) && !manual.franchiseIcon;
     });
     const scored = eligible
       .map(p => ({ p, score: baseValueScore(p) + depthBonus(p, depthCounts) }))
       .sort((a, b) => b.score - a.score);
     const cap = protectionCap();
     protectedIds.clear();
-    for (const { p } of scored.slice(0, cap)) protectedIds.add(p.playerId);
+    for (const pid of franchiseIds) protectedIds.add(pid);
+    const remaining = Math.max(0, cap - protectedIds.size);
+    for (const { p } of scored.slice(0, remaining)) protectedIds.add(p.playerId);
 
     const note = document.getElementById('auto-protect-note');
     note.style.display = 'block';
+    const franchiseNote = franchiseIds.length
+      ? ` "팬심보호"로 직접 지정한 ${franchiseIds.length}명은 점수와 무관하게 우선 확보했습니다.`
+      : '';
     note.innerHTML = `<b>추천 기준</b>: 나이(26세 근처 피크) · 올해 1군 기회(타석/이닝)와 성과 · ` +
       `FA까지 남은 시즌(길수록 보호가치↑) · 포지션별 팀 뎁스(얇은 포지션 가산점)를 조합한 점수로 ` +
-      `상위 ${cap}명을 자동 선택했습니다. 참고용 추천이며, 체크박스로 언제든 직접 바꿀 수 있습니다.`;
+      `상위 ${cap}명을 자동 선택했습니다.${franchiseNote} 참고용 추천이며, 체크박스로 언제든 직접 바꿀 수 있습니다.`;
     renderRoster();
   });
 
@@ -767,18 +791,20 @@
     return 'none';
   }
 
-  function statsSummary(p) {
+  // 1군/2군 성적을 별도 컬럼으로 보여준다(2026-08-06 사용자 요청 - 합쳐서
+  // 보여주면 1군 기록이 있는 선수의 2군 성적이 안 보였음).
+  function formatLevelStats(p, level) {
     const isPitcher = p.pos === '투수';
-    const mlb = p.mlbStats || {}, milb = p.milbStats || {};
-    const mlbPlayed = isPitcher ? (mlb.ip ?? 0) > 0 : (mlb.pa ?? 0) > 0;
-    const milbPlayed = isPitcher ? (milb.ip ?? 0) > 0 : (milb.pa ?? 0) > 0;
-    if (!mlbPlayed && !milbPlayed) return { text: '기록없음', title: '' };
-    const line = (lvl, s) => isPitcher
-      ? `${lvl} ${s.ip ?? 0}이닝 ERA${s.era ?? '-'} 삼진${s.so ?? 0} 볼넷${s.bb ?? 0}`
-      : `${lvl} 타석${s.pa ?? 0} 타율${s.avg ?? '-'} OPS${s.ops ?? '-'} 삼진${s.so ?? 0}`;
-    const parts = [];
-    if (mlbPlayed) parts.push(line('1군', mlb));
-    if (milbPlayed) parts.push(line('2군', milb));
+    const s = (level === '1군' ? p.mlbStats : p.milbStats) || {};
+    const played = isPitcher ? (s.ip ?? 0) > 0 : (s.pa ?? 0) > 0;
+    if (!played) return '기록없음';
+    return isPitcher
+      ? `${s.ip ?? 0}이닝 ERA${s.era ?? '-'} 삼진${s.so ?? 0} 볼넷${s.bb ?? 0}`
+      : `타석${s.pa ?? 0} 타율${s.avg ?? '-'} OPS${s.ops ?? '-'} 삼진${s.so ?? 0}`;
+  }
+
+  function careerStatsTitle(p) {
+    const isPitcher = p.pos === '투수';
     const ce = p.careerExperience || {};
     const ceText = isPitcher
       ? `통산 1군 ${ce.ip ?? '?'}이닝(타자수 ${ce.tbf ?? '?'})`
@@ -786,9 +812,7 @@
     const contractText = p.contract
       ? `다년계약 ${p.contract.startYear}~${p.contract.endYear}(${p.contract.totalYears}년 ${p.contract.totalEok}억)`
       : '다년계약 없음';
-    const title = [...parts, ceText,
-      `FA까지 ${p.faRemaining ?? '?'}시즌`, contractText].filter(Boolean).join(' / ');
-    return { text: parts[0] || line(milbPlayed ? '2군' : '1군', milbPlayed ? milb : mlb), title };
+    return `${ceText} / ${contractText}`;
   }
 
   function autoExclusionReason(p) {
@@ -862,6 +886,7 @@
       const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
       const isExcluded = !!autoReason || manualExcluded;
       const autoProtected = !isExcluded && isAutoProtectedFA(p);
+      const franchiseFlagged = !isExcluded && !!manual.franchiseIcon;
       const isProtected = autoProtected || protectedIds.has(p.playerId);
       const rank = rankOf.get(p.playerId);
 
@@ -887,6 +912,12 @@
         chk.type = 'checkbox'; chk.className = 'chk';
         chk.checked = true; chk.disabled = true;
         chk.title = '당해년도 FA 예정 선수 - 자동 보호(해제 불가)';
+        tdChk.appendChild(chk);
+      } else if (franchiseFlagged) {
+        const chk = document.createElement('input');
+        chk.type = 'checkbox'; chk.className = 'chk';
+        chk.checked = true; chk.disabled = true;
+        chk.title = '팬심보호로 지정됨 - 해제하려면 "수동 지정"의 팬심보호 체크를 해제하세요';
         tdChk.appendChild(chk);
       } else if (!isExcluded) {
         const chk = document.createElement('input');
@@ -914,6 +945,9 @@
       const tdLvl = document.createElement('td'); tdLvl.textContent = p.level; tr.appendChild(tdLvl);
       const tdAge = document.createElement('td'); tdAge.className = 'num mono'; tdAge.textContent = p.age ?? '-'; tr.appendChild(tdAge);
       const tdTenure = document.createElement('td'); tdTenure.className = 'num mono'; tdTenure.textContent = p.tenureYears ?? '-'; tr.appendChild(tdTenure);
+      const tdFaLeft = document.createElement('td'); tdFaLeft.className = 'num mono';
+      tdFaLeft.textContent = p.faRemaining != null ? `${p.faRemaining}시즌` : '-';
+      tr.appendChild(tdFaLeft);
       const tdSal = document.createElement('td'); tdSal.className = 'num mono'; tdSal.textContent = p.salary_manwon.toLocaleString(); tr.appendChild(tdSal);
 
       const tdMil = document.createElement('td');
@@ -922,11 +956,15 @@
       if (p.military) tdMil.title = p.military;
       tr.appendChild(tdMil);
 
-      const tdStats = document.createElement('td');
-      const stats = statsSummary(p);
-      tdStats.textContent = stats.text;
-      if (stats.title) tdStats.title = stats.title;
-      tr.appendChild(tdStats);
+      const careerTitle = careerStatsTitle(p);
+      const tdStats1 = document.createElement('td');
+      tdStats1.textContent = formatLevelStats(p, '1군');
+      tdStats1.title = careerTitle;
+      tr.appendChild(tdStats1);
+      const tdStats2 = document.createElement('td');
+      tdStats2.textContent = formatLevelStats(p, '2군');
+      tdStats2.title = careerTitle;
+      tr.appendChild(tdStats2);
 
       const tdProtectReason = document.createElement('td');
       if (isProtected) {
@@ -948,6 +986,7 @@
       tdManual.appendChild(manualChip(p.playerId, 'devPlayer', '육성선수', manual.devPlayer));
       tdManual.appendChild(manualChip(p.playerId, 'thisYearFA', `${targetYear}FA`, manual.thisYearFA));
       tdManual.appendChild(manualChip(p.playerId, 'thisYearCompAcquired', '당해보상이적', manual.thisYearCompAcquired));
+      tdManual.appendChild(franchiseChip(p.playerId, manual.franchiseIcon));
       tr.appendChild(tdManual);
 
       tbody.appendChild(tr);
@@ -968,6 +1007,28 @@
     });
     wrap.appendChild(chk);
     wrap.appendChild(document.createTextNode(label));
+    return wrap;
+  }
+
+  // 성적/연차로는 못 잡아내는 프랜차이즈 스타·팬덤 리스크(2026-08-06 사용자
+  // 사례: 이재학/양현종/강민호/김원중류, 2025 FA 오승환 참고) - 정량 점수화를
+  // 시도하는 대신 사람이 직접 지정하게 한다. devPlayer 등과 달리 "제외"가
+  // 아니라 "보호"가 목적이라 protectedIds에 직접 넣고 빼는 반대 방향
+  // 핸들러라 manualChip을 그대로 재사용하지 않았다.
+  function franchiseChip(pid, checked) {
+    const wrap = document.createElement('label');
+    wrap.className = 'manual-chip' + (checked ? ' on' : '');
+    wrap.title = '성적과 무관하게 팬덤/구단 상징성 때문에 반드시 보호해야 하는 선수를 직접 지정';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.checked = !!checked;
+    chk.addEventListener('change', () => {
+      manualReasons[pid] = manualReasons[pid] || {};
+      manualReasons[pid].franchiseIcon = chk.checked;
+      if (chk.checked) protectedIds.add(pid); else protectedIds.delete(pid);
+      renderRoster();
+    });
+    wrap.appendChild(chk);
+    wrap.appendChild(document.createTextNode('팬심보호'));
     return wrap;
   }
 
