@@ -486,8 +486,13 @@
   departingSel.addEventListener('change', () => {
     const pid = departingSel.value;
     selectedPlayer = players.find(p => p.playerId === pid && p.team === originSel.value) || null;
-    renderPlayerSummary();
+    // resetFrom(2)가 setStepEnabled('step2', false)로 2단계를 일단 꺼버리므로,
+    // renderPlayerSummary()보다 먼저 실행해야 한다 - 순서가 바뀌면
+    // renderPlayerSummary()가 방금 켠 2단계를 resetFrom이 곧바로 다시 꺼버려서
+    // 보상방식 카드가 클릭해도 반응 없는 상태로 굳어버린다(실사용자 재현 버그,
+    // 2026-08-06).
     resetFrom(2);
+    renderPlayerSummary();
   });
 
   function renderPlayerSummary() {
