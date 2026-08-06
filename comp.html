@@ -363,8 +363,9 @@
       </select>
       <select id="military-filter">
         <option value="">전체 병역</option>
-        <option value="done">군필/면제</option>
+        <option value="done">군필</option>
         <option value="serving">복무중</option>
+        <option value="notYet">미필</option>
         <option value="unknown">정보없음</option>
       </select>
       <select id="usage-filter">
@@ -418,10 +419,11 @@
     신분·당해년도 보상선수로 이적한 선수</b>는 데이터에 구분이 없어 표에서 직접 체크해야 합니다.
     외국인/아시아쿼터 선수는 로스터 수집 단계에서부터 제외되어 있습니다. 보호선수 20인 지정은
     실제 구단 발표 전까지 알 수 없으므로 직접 입력한 시나리오입니다. 병역/올해 성적/통산 경험치는
-    KBO 기록실·나무위키에서 자동 수집한 참고정보입니다 - 병역은 나무위키 인포박스에 문서가 없거나
-    동명이인으로 특정이 안 되면 "정보없음"으로 남깁니다(오탐 방지를 위해 팀명이 문서에 없으면
-    버림). 2군 타석수는 (타수+볼넷+사구)로 근사한 값이라 희생타/희생플라이만큼 실제보다 약간
-    적을 수 있습니다.
+    KBO 기록실·나무위키·선수단 이동(군보류) 이력에서 자동 수집한 참고정보입니다 - 병역은
+    나무위키 인포박스 → KBO 경력 필드의 상무/경찰 언급 → 선수단 이동 이력상 군보류 매칭 순으로
+    확인하고, 그래도 못 찾으면(29세 이하 + 이동 이력 없음) "미필"로 간주합니다. 군보류 이동 이력만
+    있고 상무/경찰 여부가 특정 안 되면 "군필"로만 표시하고 유형은 밝히지 않습니다. 2군 타석수는
+    (타수+볼넷+사구)로 근사한 값이라 희생타/희생플라이만큼 실제보다 약간 적을 수 있습니다.
   </footer>
 </div>
 
@@ -607,19 +609,20 @@
   document.getElementById('hide-excluded-toggle').addEventListener('change', renderRoster);
   document.getElementById('candidates-only-toggle').addEventListener('change', renderRoster);
 
-  // 병역상태 원문(나무위키 인포박스 텍스트, scrape_military_status.py)을
-  // 대략 3버킷으로 분류. "복무중" 판정은 구단 공식 데이터(이동사유=군보류,
-  // excl.military)를 최우선으로 쓰고, 그 다음에만 나무위키 텍스트의
-  // 완료 표현(전역/만기/소집해제/면제 등)으로 "군필"을 추정한다. 그 외엔
-  // 정보없음 - 오판보다 "모른다"가 안전하다는 이 프로젝트의 기존 방침.
-  const MILITARY_DONE_RE = /전역|만기|소집해제|면제|제대/;
+  // 병역상태 4버킷 분류 (2026-08-06 사용자 지침 반영). "복무중"은 구단 공식
+  // 데이터(이동사유=군보류, excl.military)로 최우선 판정한다. 그 지점까지
+  // 왔는데 병역 텍스트가 있다는 건 - 나무위키 실제기록/KBO 경력필드 상무·
+  // 경찰 감지/선수단 이동(군보류) 이력 매칭/30세 이상 나이추정 중 무엇이든
+  // - 이미 마쳤다는 뜻이므로 전부 "군필"로 묶는다. "미필(추정)"만 별도
+  // 버킷("미필")으로 분리한다(29세 이하 + 선수단 이동 이력 없음 -
+  // scrape_military_from_transactions.py 최종 확정값).
   function militaryBucket(p) {
     if (p.excl.military) return 'serving';
     if (!p.military) return 'unknown';
-    if (MILITARY_DONE_RE.test(p.military)) return 'done';
-    return 'serving';
+    if (p.military === '미필(추정)') return 'notYet';
+    return 'done';
   }
-  const MILITARY_LABEL = { done: '군필/면제', serving: '복무중', unknown: '정보없음' };
+  const MILITARY_LABEL = { done: '군필', serving: '복무중', notYet: '미필', unknown: '정보없음' };
 
   function usageBucket(p) {
     const mlb = p.mlbStats || {};
