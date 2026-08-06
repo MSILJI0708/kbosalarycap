@@ -344,9 +344,10 @@
       </div>
     </div>
     <div class="legend-row">
-      <span class="lg-item"><span class="lg-swatch" style="background:var(--protect-bg);border:1px solid var(--protect-tx)"></span>보호선수(20인)</span>
+      <span class="lg-item"><span class="lg-swatch" style="background:var(--protect-bg);border:1px solid var(--protect-tx)"></span>보호선수(체크박스로 지정, 20/25인 쿼터 소진)</span>
       <span class="lg-item"><span class="lg-swatch" style="background:var(--candidate-bg);border:1px solid var(--candidate-tx)"></span>보상선수 후보</span>
       <span class="lg-item"><span class="lg-swatch" style="background:var(--badge-gen-bg);opacity:.6"></span>자동 제외(회색)</span>
+      <span class="lg-item">🔒 당해년도 FA 예정 선수 - 쿼터와 무관하게 자동 보호(체크 해제 불가)</span>
     </div>
     <div class="roster-toolbar">
       <input type="text" id="roster-search" placeholder="선수명 검색">
@@ -408,6 +409,7 @@
             <th class="num">연봉(만원)</th>
             <th>병역</th>
             <th>올해 성적</th>
+            <th>보호 사유</th>
             <th>자동 제외 사유</th>
             <th>수동 지정</th>
           </tr>
@@ -682,6 +684,21 @@
     return tags;
   }
 
+  // 당해년도 FA 자격을 얻는 선수(fa2027Candidate) 본인이 이적구단 로스터에
+  // 있는 경우, 보호선수 20/25인 명단과는 별개로 무조건 보호된다(2026-08-06
+  // 사용자 확인 - "등록인원수에 포함 안 되기 때문에" 사용자가 체크 해제할
+  // 수 없게 하라는 지침). 곧 자유계약이 될 선수를 보상선수로 넘긴다는
+  // 개념 자체가 성립하지 않으므로, 보상선수 후보 풀에서도 항상 제외한다.
+  function isAutoProtectedFA(p) { return !!p.fa2027Candidate; }
+
+  function protectionReasonText(p, depthCounts) {
+    if (isAutoProtectedFA(p)) {
+      return '당해년도 FA 자격 취득 예정 - 보호선수 20/25인 쿼터와 무관하게 자동 보호(보상선수 후보 자체가 될 수 없음)';
+    }
+    const tags = reasonTags(p, depthCounts);
+    return tags.length ? tags.join(' · ') : '사용자 직접 지정(특별한 자동 산출 근거 없음)';
+  }
+
   destSel.addEventListener('change', () => {
     protectedIds.clear();
     for (const k in manualReasons) delete manualReasons[k];
@@ -706,7 +723,9 @@
       const autoReason = autoExclusionReason(p);
       const manual = manualReasons[p.playerId] || {};
       const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
-      return !autoReason && !manualExcluded;
+      // 당해년도 FA 예정 선수는 무조건 자동 보호라 20/25인 쿼터를 쓸 필요가
+      // 없다 - 추천 대상 풀에서 애초에 빼서 쿼터를 낭비하지 않게 한다.
+      return !autoReason && !manualExcluded && !isAutoProtectedFA(p);
     });
     const scored = eligible
       .map(p => ({ p, score: baseValueScore(p) + depthBonus(p, depthCounts) }))
@@ -800,6 +819,7 @@
       .slice()
       .sort((a, b) => (b.salary_manwon || 0) - (a.salary_manwon || 0));
     const rankOf = new Map(rosterFull.map((p, i) => [p.playerId, i + 1]));
+    const depthCounts = computeTeamDepth(rosterFull);
 
     // 보호선수 티어 구분(사용자 확인, 2026-08-05): 상위10(구단 핵심전력),
     // 11~15(1군 레귤러지만 top10엔 밀림), 16~20(주전 출장 가능). 25인 한도인
@@ -832,7 +852,7 @@
       const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
       const isExcluded = !!autoReason || manualExcluded;
       if (hideExcluded && isExcluded) return false;
-      if (candidatesOnly && (isExcluded || protectedIds.has(p.playerId))) return false;
+      if (candidatesOnly && (isExcluded || protectedIds.has(p.playerId) || isAutoProtectedFA(p))) return false;
       return true;
     });
 
@@ -841,7 +861,8 @@
       const manual = manualReasons[p.playerId] || {};
       const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
       const isExcluded = !!autoReason || manualExcluded;
-      const isProtected = protectedIds.has(p.playerId);
+      const autoProtected = !isExcluded && isAutoProtectedFA(p);
+      const isProtected = autoProtected || protectedIds.has(p.playerId);
       const rank = rankOf.get(p.playerId);
 
       const tr = document.createElement('tr');
@@ -861,7 +882,13 @@
 
       const tdChk = document.createElement('td');
       tdChk.className = 'center';
-      if (!isExcluded) {
+      if (autoProtected) {
+        const chk = document.createElement('input');
+        chk.type = 'checkbox'; chk.className = 'chk';
+        chk.checked = true; chk.disabled = true;
+        chk.title = '당해년도 FA 예정 선수 - 자동 보호(해제 불가)';
+        tdChk.appendChild(chk);
+      } else if (!isExcluded) {
         const chk = document.createElement('input');
         chk.type = 'checkbox'; chk.className = 'chk';
         chk.checked = isProtected;
@@ -900,6 +927,14 @@
       tdStats.textContent = stats.text;
       if (stats.title) tdStats.title = stats.title;
       tr.appendChild(tdStats);
+
+      const tdProtectReason = document.createElement('td');
+      if (isProtected) {
+        tdProtectReason.textContent = protectionReasonText(p, depthCounts);
+        tdProtectReason.style.fontSize = '11.5px';
+        tdProtectReason.style.color = 'var(--protect-tx)';
+      }
+      tr.appendChild(tdProtectReason);
 
       const tdReason = document.createElement('td');
       if (autoReason) {
@@ -948,6 +983,7 @@
       if (autoExclusionReason(p)) return false;
       const m = manualReasons[p.playerId] || {};
       if (m.devPlayer || m.thisYearFA || m.thisYearCompAcquired) return false;
+      if (isAutoProtectedFA(p)) return false; // 당해년도 FA 예정 - 무조건 보호, 후보 자체가 될 수 없음
       if (protectedIds.has(p.playerId)) return false;
       return true;
     }).sort((a, b) => (b.salary_manwon || 0) - (a.salary_manwon || 0));
