@@ -238,6 +238,16 @@
   }
   .manual-chip input { width: 12px; height: 12px; }
   .manual-chip.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+  button.manual-chip { background: var(--control-bg); font-family: var(--font-body); }
+  button.manual-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .reco-tag {
+    display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px;
+    border-radius: 100px; margin: 0 3px 3px 0; background: color-mix(in srgb, var(--good) 16%, var(--card)); color: var(--good);
+  }
+  .reco-card {
+    border: 1px solid var(--line-strong); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .reco-card .reco-name { font-weight: 800; font-size: 13.5px; margin-bottom: 4px; }
 
   .result-card { border-top: 3px solid var(--good); }
   .result-empty { font-size: 13px; color: var(--muted); padding: 8px 0; }
@@ -380,8 +390,10 @@
       <label class="manual-chip" style="cursor:pointer">
         <input type="checkbox" id="candidates-only-toggle">현재 후보만 보기
       </label>
+      <button type="button" id="auto-protect-btn" class="manual-chip" style="cursor:pointer;font-weight:700">추천 보호선수 자동 선택</button>
       <span class="protect-count" id="protect-count">보호선수 0/20</span>
     </div>
+    <div class="note-box" id="auto-protect-note" style="display:none"></div>
     <div class="table-scroll">
       <table id="roster-table">
         <thead>
@@ -598,6 +610,78 @@
   const manualExclIds = new Set(); // playerId -> Set of reason keys, but simplified to any-manual-exclude
   const manualReasons = {}; // playerId -> {devPlayer, thisYearFA, thisYearCompAcquired}
 
+  // ── 보호선수/보상선수 추천 스코어링 (2026-08-06 사용자 요청) ──────────────
+  // "연봉 순위 = 팀 내 중요도"가 아니라는 전제로, 나이·올해 기회(타석/이닝)·
+  // 성과·FA 잔여시즌·포지션별 팀 뎁스를 조합한 결정론적 점수. AI 판단이
+  // 아니라 명시적 규칙이라 왜 이 점수가 나왔는지 항상 설명 가능해야 한다는
+  // 이 프로젝트의 기존 방침(필터·자동판정 전부 규칙 기반)을 그대로 따른다.
+  // 절대적 "정답 점수"가 아니라 상대적 우선순위 참고용이며, 사용자가 언제든
+  // 체크박스로 뒤집을 수 있다.
+  function positionGroupOf(p) { return p.posDetail || (p.pos === '투수' ? '투' : null); }
+
+  // 포지션별 "실전급"(올해 1군에서 유의미한 기회를 받은) 인원 카운트.
+  // 숫자가 작을수록 그 포지션이 얇다(뎁스 부족)고 본다.
+  function computeTeamDepth(roster) {
+    const counts = { 투: 0, 포: 0, 내: 0, 외: 0 };
+    for (const p of roster) {
+      const g = positionGroupOf(p);
+      if (!g || !(g in counts)) continue;
+      const mlb = p.mlbStats || {};
+      const played = p.pos === '투수' ? (mlb.ip || 0) >= 20 : (mlb.pa || 0) >= 50;
+      if (played) counts[g]++;
+    }
+    return counts;
+  }
+
+  // 포지션 얇을수록 보너스(최대 +3, 실전급 3명 이상이면 보너스 없음)
+  function depthBonus(p, depthCounts) {
+    const g = positionGroupOf(p);
+    if (!g || !depthCounts) return 0;
+    const n = depthCounts[g] ?? 3;
+    return Math.max(0, 3 - n);
+  }
+
+  // 나이/올해 기회·성과/FA 잔여시즌을 조합한 기본 가치 점수(팀 상황과 무관).
+  function baseValueScore(p) {
+    let score = 0;
+    const age = p.age ?? 27;
+    score += 10 - Math.min(10, Math.abs(age - 26) * 0.8); // 26세 근처 피크, 멀어질수록 감점
+
+    const isPitcher = p.pos === '투수';
+    const mlb = p.mlbStats || {}, milb = p.milbStats || {};
+    if (isPitcher) {
+      const ip = mlb.ip || 0;
+      score += Math.min(10, ip / 10); // 100이닝=만점
+      if (ip >= 10 && mlb.era != null) score += Math.max(-5, Math.min(8, (5.0 - mlb.era) * 2));
+      if (ip < 5 && (milb.ip || 0) > 0) score -= 1;
+    } else {
+      const pa = mlb.pa || 0;
+      score += Math.min(10, pa / 40); // 400타석=만점
+      if (pa >= 50 && mlb.ops != null) score += Math.max(-5, Math.min(8, (mlb.ops - 0.700) * 20));
+      if (pa < 20 && (milb.pa || 0) > 0) score -= 1;
+    }
+
+    if (p.faRemaining != null) score += Math.min(4, p.faRemaining * 0.7); // 오래 잡아둘수록 보호가치 ↑
+    if (p.tenureYears != null) {
+      if (p.tenureYears <= 1) score -= 1; // 검증 덜 된 신인급
+      if (p.tenureYears >= 12) score -= 1; // 노장
+    }
+    return score;
+  }
+
+  function reasonTags(p, depthCounts) {
+    const tags = [];
+    const age = p.age ?? 27;
+    if (age <= 26) tags.push('젊은 유망주');
+    const isPitcher = p.pos === '투수';
+    const mlb = p.mlbStats || {};
+    if (isPitcher ? (mlb.ip || 0) >= 50 : (mlb.pa || 0) >= 200) tags.push('올해 검증된 실전력');
+    if (p.faRemaining != null && p.faRemaining >= 4) tags.push(`장기 보유 가능(FA까지 ${p.faRemaining}시즌)`);
+    const db = depthBonus(p, depthCounts);
+    if (db > 0) tags.push(`포지션 뎁스 보강(${positionGroupOf(p)})`);
+    return tags;
+  }
+
   destSel.addEventListener('change', () => {
     protectedIds.clear();
     for (const k in manualReasons) delete manualReasons[k];
@@ -613,6 +697,31 @@
   document.getElementById('usage-filter').addEventListener('change', renderRoster);
   document.getElementById('hide-excluded-toggle').addEventListener('change', renderRoster);
   document.getElementById('candidates-only-toggle').addEventListener('change', renderRoster);
+
+  document.getElementById('auto-protect-btn').addEventListener('click', () => {
+    if (!destSel.value) return;
+    const roster = byTeam[destSel.value] || [];
+    const depthCounts = computeTeamDepth(roster);
+    const eligible = roster.filter(p => {
+      const autoReason = autoExclusionReason(p);
+      const manual = manualReasons[p.playerId] || {};
+      const manualExcluded = manual.devPlayer || manual.thisYearFA || manual.thisYearCompAcquired;
+      return !autoReason && !manualExcluded;
+    });
+    const scored = eligible
+      .map(p => ({ p, score: baseValueScore(p) + depthBonus(p, depthCounts) }))
+      .sort((a, b) => b.score - a.score);
+    const cap = protectionCap();
+    protectedIds.clear();
+    for (const { p } of scored.slice(0, cap)) protectedIds.add(p.playerId);
+
+    const note = document.getElementById('auto-protect-note');
+    note.style.display = 'block';
+    note.innerHTML = `<b>추천 기준</b>: 나이(26세 근처 피크) · 올해 1군 기회(타석/이닝)와 성과 · ` +
+      `FA까지 남은 시즌(길수록 보호가치↑) · 포지션별 팀 뎁스(얇은 포지션 가산점)를 조합한 점수로 ` +
+      `상위 ${cap}명을 자동 선택했습니다. 참고용 추천이며, 체크박스로 언제든 직접 바꿀 수 있습니다.`;
+    renderRoster();
+  });
 
   // 병역상태 4버킷 분류 (2026-08-06 사용자 지침 반영). "복무중"은 구단 공식
   // 데이터(이동사유=군보류, excl.military)로 최우선 판정한다. 그 지점까지
@@ -848,8 +957,31 @@
       resultBox.innerHTML = '<div class="result-empty">현재 조건으로는 후보가 없습니다 - 보호선수를 줄이거나 검색 조건을 확인하세요.</div>';
       return;
     }
+
+    // TOP5 추천: "구단 상황 무관 베스트 카드" 점수(baseValueScore) +
+    // "원소속구단(보상선수를 실제로 받는 쪽)의 얇은 포지션을 메워주는가"
+    // 보너스를 더해 정렬한다(2026-08-06 사용자 요청).
+    const originRoster = byTeam[originSel.value] || [];
+    const originDepth = computeTeamDepth(originRoster);
+    const top5 = candidates
+      .map(p => ({ p, score: baseValueScore(p) + depthBonus(p, originDepth) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
     let html = `<div class="result-count">${candidates.length}명</div>`
-      + `<div class="result-empty" style="margin-bottom:10px">${destSel.value} 로스터 중 보상선수로 지명 가능한 인원</div>`
+      + `<div class="result-empty" style="margin-bottom:10px">${destSel.value} 로스터 중 보상선수로 지명 가능한 인원</div>`;
+
+    html += `<div style="font-weight:800;font-size:13px;margin:14px 0 8px">추천 TOP 5 <span style="font-weight:400;color:var(--muted);font-size:11.5px">` +
+      `(팀 상황 무관 기본 가치 + ${originSel.value || '원소속구단'} 뎁스 보강 보너스)</span></div>`;
+    for (const { p } of top5) {
+      const tags = reasonTags(p, originDepth);
+      html += `<div class="reco-card"><div class="reco-name">${p.name} <span style="font-weight:400;color:var(--muted);font-size:11.5px">` +
+        `${p.pos}${p.posDetail ? '(' + p.posDetail + ')' : ''} · ${p.level} · 나이 ${p.age ?? '-'} · ${p.salary_manwon.toLocaleString()}만원</span></div>` +
+        (tags.length ? tags.map(t => `<span class="reco-tag">${t}</span>`).join('') : '<span class="reco-tag" style="opacity:.6">특별 강점 태그 없음</span>') +
+        '</div>';
+    }
+
+    html += '<div style="font-weight:800;font-size:13px;margin:16px 0 8px">전체 후보 목록</div>'
       + '<div class="table-scroll" style="max-height:40vh"><table><thead><tr>'
       + '<th>선수명</th><th>포지션</th><th>레벨</th><th class="num">나이</th><th class="num">연봉(만원)</th>'
       + '</tr></thead><tbody>';
