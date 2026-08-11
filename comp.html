@@ -203,25 +203,25 @@
   .roster-toolbar .protect-count.full { color: var(--critical); }
 
   .weight-panel {
-    border: 1px solid var(--line-strong); border-radius: 10px; padding: 4px 14px; margin-bottom: 12px;
-    background: var(--page);
+    border: 1.5px solid var(--accent); border-radius: 10px; padding: 4px 14px; margin-bottom: 12px;
+    background: color-mix(in srgb, var(--accent) 6%, var(--page));
   }
   .weight-panel summary {
-    cursor: pointer; font-size: 12.5px; font-weight: 700; padding: 8px 0; color: var(--ink-2);
+    cursor: pointer; font-size: 13.5px; font-weight: 800; padding: 10px 0; color: var(--ink);
     list-style: none; display: flex; align-items: center; gap: 6px;
   }
   .weight-panel summary::-webkit-details-marker { display: none; }
-  .weight-panel summary::before { content: '▸'; font-size: 10px; }
+  .weight-panel summary::before { content: '▸'; font-size: 11px; color: var(--accent); }
   .weight-panel[open] summary::before { content: '▾'; }
   .weight-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 20px;
     padding: 4px 0 14px;
   }
-  .weight-item label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .weight-item label { font-size: 11.5px; font-weight: 800; color: var(--ink); text-transform: uppercase; letter-spacing: 0.03em; }
   .weight-item { display: flex; flex-direction: column; gap: 4px; }
   .weight-item .weight-row { display: flex; align-items: center; gap: 8px; }
   .weight-item input[type="range"] { flex: 1; }
-  .weight-item .weight-val { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); min-width: 28px; text-align: right; }
+  .weight-item .weight-val { font-family: var(--font-mono); font-weight: 700; font-size: 12.5px; color: var(--ink); min-width: 28px; text-align: right; }
 
   .table-scroll { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 10px; }
   table { border-collapse: collapse; width: 100%; min-width: 1360px; }
@@ -269,6 +269,14 @@
   .manual-chip.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
   button.manual-chip { background: var(--control-bg); font-family: var(--font-body); }
   button.manual-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
+    padding: 10px 18px; font-size: 13.5px; font-weight: 800; font-family: var(--font-body);
+    box-shadow: 0 2px 8px -2px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:active { filter: brightness(0.95); }
   .reco-tag {
     display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px;
     border-radius: 100px; margin: 0 3px 3px 0; background: color-mix(in srgb, var(--good) 16%, var(--card)); color: var(--good);
@@ -461,7 +469,7 @@
       <label class="manual-chip" style="cursor:pointer">
         <input type="checkbox" id="candidates-only-toggle">현재 후보만 보기
       </label>
-      <button type="button" id="auto-protect-btn" class="manual-chip" style="cursor:pointer;font-weight:700">추천 보호선수 자동 선택</button>
+      <button type="button" id="auto-protect-btn" class="btn-primary">✨ 추천 보호선수 자동 선택</button>
       <span class="protect-count" id="protect-count">보호선수 0/20</span>
     </div>
     <div class="note-box" id="auto-protect-note" style="display:none"></div>
