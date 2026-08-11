@@ -405,6 +405,15 @@
           </select>
         </div>
         <div class="weight-item">
+          <label for="w-pitcherrole">투수 세부 우선순위</label>
+          <select id="w-pitcherrole">
+            <option value="neutral">중립</option>
+            <option value="bullpen">불펜 우선</option>
+            <option value="starter">선발가능자원 우선</option>
+            <option value="lefty">좌투 우선</option>
+          </select>
+        </div>
+        <div class="weight-item">
           <label for="w-perf">올해 성과·기회 비중</label>
           <div class="weight-row">
             <input type="range" id="w-perf" min="0" max="2" step="0.25" value="1">
@@ -522,7 +531,11 @@
     뎁스를 조합한 규칙 기반 점수이지 AI 판단이 아닙니다. 성적이 떨어져도 프랜차이즈 상징성·팬덤
     때문에 사실상 보호가 강제되는 선수(예: 은퇴 임박 원클럽맨, 레전드급 선수)는 정량 지표로
     가려낼 수 없어 자동 채점 대상에서 빠져 있으므로, "팬심보호" 체크박스로 직접 지정해야 합니다
-    (지정 시 점수와 무관하게 20/25인 쿼터에서 우선 확보됩니다).
+    (지정 시 점수와 무관하게 20/25인 쿼터에서 우선 확보됩니다). 투수 투구팔(좌투/우투)과
+    선발가능/불펜 성향은 KBO 규정이닝 리더보드가 아니라 선수 개인 기록 페이지(등판수·세이브·홀드·
+    완투·완봉)에서 직접 추정합니다 - 리더보드는 상위 핵심 선발만 나와서 보상선수 후보가 될 만한
+    투수 대부분이 애초에 빠져 있기 때문입니다. 타자 세부 수비포지션(1루수/유격수 등)은 이번 시즌
+    수비 기록이 뚜렷한 선수만 있고, 나머지는 광역 포지션(내야수/외야수)으로만 표시됩니다.
   </footer>
 </div>
 
@@ -723,17 +736,38 @@
 
   // 추천 가중치 기본값(사용자가 "추천 가중치 설정" 패널을 안 건드리면 이대로
   // 적용된다 - 기존 동작과 100% 동일하게 유지하려고 전부 1.0/중립).
-  const DEFAULT_WEIGHTS = { age: 1, posBias: 'neutral', perf: 1, fa: 1, depth: 1 };
+  const DEFAULT_WEIGHTS = { age: 1, posBias: 'neutral', pitcherRole: 'neutral', perf: 1, fa: 1, depth: 1 };
 
   function currentWeights() {
     const el = (id) => document.getElementById(id);
     return {
       age: parseFloat(el('w-age').value),
       posBias: el('w-posbias').value,
+      pitcherRole: el('w-pitcherrole').value,
       perf: parseFloat(el('w-perf').value),
       fa: parseFloat(el('w-fa').value),
       depth: parseFloat(el('w-depth').value),
     };
+  }
+
+  // 투수 선발/불펜 성향 추정 - KBO의 "규정이닝" 리더보드는 상위 핵심 선발만
+  // 나와서 못 쓴다(2026-08-06 사용자 지적: 보상선수 후보가 될 만한 규정이닝
+  // 미달 투수가 거기엔 없음). 대신 이미 선수 개인페이지(Total.aspx)에서
+  // 긁어온 올해 등판수/세이브/홀드/완투/완봉으로 직접 추정한다 - 개인페이지는
+  // 규정이닝과 무관하게 그 선수의 전체 기록을 보여주므로 이 문제가 없다.
+  function isReliever(p) {
+    const role = p.pitcherRole || {};
+    const ip = (p.mlbStats || {}).ip || 0;
+    const g = role.g || 0;
+    if ((role.sv || 0) > 0 || (role.hld || 0) > 0) return true;
+    return g > 0 && (ip / g) < 2;
+  }
+  function isStarterCapable(p) {
+    const role = p.pitcherRole || {};
+    const ip = (p.mlbStats || {}).ip || 0;
+    const g = role.g || 0;
+    if ((role.cg || 0) > 0 || (role.sho || 0) > 0) return true;
+    return g > 0 && (ip / g) >= 3;
   }
 
   // 포지션 얇을수록 보너스(가중치 기본 최대 +3, 실전급 3명 이상이면 보너스 없음)
@@ -777,6 +811,11 @@
     }
     if (w.posBias === 'pitcher' && isPitcher) score += 5;
     if (w.posBias === 'hitter' && !isPitcher) score += 5;
+    if (isPitcher) {
+      if (w.pitcherRole === 'bullpen' && isReliever(p)) score += 5;
+      if (w.pitcherRole === 'starter' && isStarterCapable(p)) score += 5;
+      if (w.pitcherRole === 'lefty' && p.throws === '좌투') score += 5;
+    }
     return score;
   }
 
@@ -792,6 +831,9 @@
     if (db > 0) tags.push(`포지션 뎁스 보강(${positionGroupOf(p)})`);
     if (weights && weights.posBias === 'pitcher' && isPitcher) tags.push('투수 우선 가중치 적용');
     if (weights && weights.posBias === 'hitter' && !isPitcher) tags.push('타자 우선 가중치 적용');
+    if (weights && isPitcher && weights.pitcherRole === 'bullpen' && isReliever(p)) tags.push('불펜 우선 가중치 적용');
+    if (weights && isPitcher && weights.pitcherRole === 'starter' && isStarterCapable(p)) tags.push('선발가능자원 우선 가중치 적용');
+    if (weights && isPitcher && weights.pitcherRole === 'lefty' && p.throws === '좌투') tags.push('좌투 우선 가중치 적용');
     return tags;
   }
 
@@ -865,7 +907,8 @@
     const franchiseNote = franchiseIds.length
       ? ` "팬심보호"로 직접 지정한 ${franchiseIds.length}명은 점수와 무관하게 우선 확보했습니다.`
       : '';
-    const weightNote = (weights.age !== 1 || weights.perf !== 1 || weights.fa !== 1 || weights.depth !== 1 || weights.posBias !== 'neutral')
+    const weightNote = (weights.age !== 1 || weights.perf !== 1 || weights.fa !== 1 || weights.depth !== 1 ||
+      weights.posBias !== 'neutral' || weights.pitcherRole !== 'neutral')
       ? ' (사용자 지정 가중치 적용됨)' : '';
     note.innerHTML = `<b>추천 기준${weightNote}</b>: 나이(26세 근처 피크) · 올해 1군 기회(타석/이닝)와 성과 · ` +
       `FA까지 남은 시즌(길수록 보호가치↑) · 포지션별 팀 뎁스(얇은 포지션 가산점)를 조합한 점수로 ` +
@@ -886,6 +929,7 @@
     });
   });
   document.getElementById('w-posbias').addEventListener('change', updateResult);
+  document.getElementById('w-pitcherrole').addEventListener('change', updateResult);
 
   // 병역상태 4버킷 분류 (2026-08-06 사용자 지침 반영). "복무중"은 구단 공식
   // 데이터(이동사유=군보류, excl.military)로 최우선 판정한다. 그 지점까지
@@ -1100,7 +1144,12 @@
       });
       tr.appendChild(tdName);
 
-      const tdPos = document.createElement('td'); tdPos.textContent = p.posDetail ? `${p.pos}(${p.posDetail})` : p.pos; tr.appendChild(tdPos);
+      const tdPos = document.createElement('td');
+      let posText = p.posDetail ? `${p.pos}(${p.posDetail})` : p.pos;
+      if (p.pos === '투수' && p.throws) posText += ` · ${p.throws}`;
+      else if (p.posSpecific) posText += ` · ${p.posSpecific}`;
+      tdPos.textContent = posText;
+      tr.appendChild(tdPos);
       const tdLvl = document.createElement('td'); tdLvl.textContent = p.level; tr.appendChild(tdLvl);
       const tdAge = document.createElement('td'); tdAge.className = 'num mono'; tdAge.textContent = p.age ?? '-'; tr.appendChild(tdAge);
       const tdTenure = document.createElement('td'); tdTenure.className = 'num mono'; tdTenure.textContent = p.tenureYears ?? '-'; tr.appendChild(tdTenure);
