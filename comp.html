@@ -762,12 +762,25 @@
     if ((role.sv || 0) > 0 || (role.hld || 0) > 0) return true;
     return g > 0 && (ip / g) < 2;
   }
+  // 선발 등판 기록은 GS(선발경기, scrape_defense_position.py의 "포지션=투수"
+  // 행)로 직접 확인한다(2026-08-06 사용자 요청) - 3경기 이상 선발등판하면
+  // "선발가능자원". "선발핵심자원"(규정이닝급)은 순수 이닝(IP) 기준으로
+  // 잘라보니 실제 로테이션 정규 멤버 상당수가 걸러졌다(예: 2026시즌 중반
+  // 기준 안우진 16선발/73이닝, 최승용 17선발/83이닝처럼 선발을 15경기 넘게
+  // 나갔어도 이닝은 90 밑인 경우가 흔함 - 조기강판/짧은 이닝 소화 스타일
+  // 차이 때문). 그래서 이닝 대신 "선발경기수 15 이상"을 규정이닝급 근사치로
+  // 쓴다 - 이만큼 로테이션을 꾸준히 돌았으면 사실상 정규 선발이라고 봐도
+  // 무방하고, 특정 경기의 조기강판 여부에 휘둘리지 않는다. 공식 규정이닝
+  // 자격 심사가 아니라 참고용 가중치임을 유의.
+  function starterTier(p) {
+    if (p.pos !== '투수') return null;
+    const gs = (p.pitcherRole || {}).gs || 0;
+    if (gs >= 15) return 'core'; // 선발핵심자원
+    if (gs >= 3) return 'capable'; // 선발가능자원
+    return null;
+  }
   function isStarterCapable(p) {
-    const role = p.pitcherRole || {};
-    const ip = (p.mlbStats || {}).ip || 0;
-    const g = role.g || 0;
-    if ((role.cg || 0) > 0 || (role.sho || 0) > 0) return true;
-    return g > 0 && (ip / g) >= 3;
+    return !!starterTier(p);
   }
 
   // 포지션 얇을수록 보너스(가중치 기본 최대 +3, 실전급 3명 이상이면 보너스 없음)
@@ -813,7 +826,11 @@
     if (w.posBias === 'hitter' && !isPitcher) score += 5;
     if (isPitcher) {
       if (w.pitcherRole === 'bullpen' && isReliever(p)) score += 5;
-      if (w.pitcherRole === 'starter' && isStarterCapable(p)) score += 5;
+      if (w.pitcherRole === 'starter') {
+        const tier = starterTier(p);
+        if (tier === 'capable') score += 5;
+        if (tier === 'core') score += 8; // 선발핵심자원은 더 강하게 우대
+      }
       if (w.pitcherRole === 'lefty' && p.throws === '좌투') score += 5;
     }
     return score;
@@ -832,7 +849,11 @@
     if (weights && weights.posBias === 'pitcher' && isPitcher) tags.push('투수 우선 가중치 적용');
     if (weights && weights.posBias === 'hitter' && !isPitcher) tags.push('타자 우선 가중치 적용');
     if (weights && isPitcher && weights.pitcherRole === 'bullpen' && isReliever(p)) tags.push('불펜 우선 가중치 적용');
-    if (weights && isPitcher && weights.pitcherRole === 'starter' && isStarterCapable(p)) tags.push('선발가능자원 우선 가중치 적용');
+    if (isPitcher) {
+      const tier = starterTier(p);
+      if (tier === 'core') tags.push('선발핵심자원');
+      else if (tier === 'capable') tags.push('선발가능자원');
+    }
     if (weights && isPitcher && weights.pitcherRole === 'lefty' && p.throws === '좌투') tags.push('좌투 우선 가중치 적용');
     return tags;
   }
