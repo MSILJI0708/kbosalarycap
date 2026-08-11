@@ -202,6 +202,27 @@
   .roster-toolbar .protect-count { font-size: 12.5px; font-weight: 700; color: var(--protect-tx); }
   .roster-toolbar .protect-count.full { color: var(--critical); }
 
+  .weight-panel {
+    border: 1px solid var(--line-strong); border-radius: 10px; padding: 4px 14px; margin-bottom: 12px;
+    background: var(--page);
+  }
+  .weight-panel summary {
+    cursor: pointer; font-size: 12.5px; font-weight: 700; padding: 8px 0; color: var(--ink-2);
+    list-style: none; display: flex; align-items: center; gap: 6px;
+  }
+  .weight-panel summary::-webkit-details-marker { display: none; }
+  .weight-panel summary::before { content: '▸'; font-size: 10px; }
+  .weight-panel[open] summary::before { content: '▾'; }
+  .weight-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 20px;
+    padding: 4px 0 14px;
+  }
+  .weight-item label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .weight-item { display: flex; flex-direction: column; gap: 4px; }
+  .weight-item .weight-row { display: flex; align-items: center; gap: 8px; }
+  .weight-item input[type="range"] { flex: 1; }
+  .weight-item .weight-val { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); min-width: 28px; text-align: right; }
+
   .table-scroll { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 10px; }
   table { border-collapse: collapse; width: 100%; min-width: 1360px; }
   thead th {
@@ -217,6 +238,14 @@
   tbody tr.protected-row { background: var(--protect-bg); }
   tbody tr.candidate-row { background: var(--candidate-bg); }
   td.name { font-weight: 700; }
+  td.expandable-name { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+  td.expandable-name:hover { color: var(--accent); }
+  tr.yearly-detail-row td { background: var(--page); padding: 12px 16px; }
+  .yearly-title { font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--ink-2); }
+  table.yearly-table { border-collapse: collapse; width: auto; min-width: 0; }
+  table.yearly-table th, table.yearly-table td { padding: 4px 14px 4px 0; font-size: 12px; border: none; }
+  table.yearly-table thead th { position: static; text-transform: none; letter-spacing: 0; font-size: 10.5px; }
+  .yearly-empty { font-size: 12px; color: var(--muted); }
   td.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
   .excl-badge {
@@ -349,6 +378,47 @@
       <span class="lg-item"><span class="lg-swatch" style="background:var(--badge-gen-bg);opacity:.6"></span>자동 제외(회색)</span>
       <span class="lg-item">🔒 당해년도 FA 예정 선수 - 쿼터와 무관하게 자동 보호(체크 해제 불가)</span>
     </div>
+    <details class="weight-panel" id="weight-panel">
+      <summary>추천 가중치 설정 (선택사항 - 기본값 그대로 써도 됨)</summary>
+      <div class="weight-grid">
+        <div class="weight-item">
+          <label for="w-age">나이(젊음) 중시도</label>
+          <div class="weight-row">
+            <input type="range" id="w-age" min="0" max="2" step="0.25" value="1">
+            <span class="weight-val" id="w-age-val">1.0</span>
+          </div>
+        </div>
+        <div class="weight-item">
+          <label for="w-posbias">포지션 우선순위</label>
+          <select id="w-posbias">
+            <option value="neutral">중립</option>
+            <option value="pitcher">투수 우선</option>
+            <option value="hitter">타자 우선</option>
+          </select>
+        </div>
+        <div class="weight-item">
+          <label for="w-perf">올해 성과·기회 비중</label>
+          <div class="weight-row">
+            <input type="range" id="w-perf" min="0" max="2" step="0.25" value="1">
+            <span class="weight-val" id="w-perf-val">1.0</span>
+          </div>
+        </div>
+        <div class="weight-item">
+          <label for="w-fa">장기보유(FA잔여) 비중</label>
+          <div class="weight-row">
+            <input type="range" id="w-fa" min="0" max="2" step="0.25" value="1">
+            <span class="weight-val" id="w-fa-val">1.0</span>
+          </div>
+        </div>
+        <div class="weight-item">
+          <label for="w-depth">포지션 뎁스(약점 보강) 비중</label>
+          <div class="weight-row">
+            <input type="range" id="w-depth" min="0" max="2" step="0.25" value="1">
+            <span class="weight-val" id="w-depth-val">1.0</span>
+          </div>
+        </div>
+      </div>
+    </details>
     <div class="roster-toolbar">
       <input type="text" id="roster-search" placeholder="선수명 검색">
       <select id="tier-filter">
@@ -618,6 +688,7 @@
   const protectedIds = new Set();
   const manualExclIds = new Set(); // playerId -> Set of reason keys, but simplified to any-manual-exclude
   const manualReasons = {}; // playerId -> {devPlayer, thisYearFA, thisYearCompAcquired}
+  const expandedIds = new Set(); // 선수명 클릭 시 최근 5년 추이를 펼쳐서 보는 행(2026-08-06 사용자 요청)
 
   // ── 보호선수/보상선수 추천 스코어링 (2026-08-06 사용자 요청) ──────────────
   // "연봉 순위 = 팀 내 중요도"가 아니라는 전제로, 나이·올해 기회(타석/이닝)·
@@ -642,43 +713,66 @@
     return counts;
   }
 
-  // 포지션 얇을수록 보너스(최대 +3, 실전급 3명 이상이면 보너스 없음)
-  function depthBonus(p, depthCounts) {
+  // 추천 가중치 기본값(사용자가 "추천 가중치 설정" 패널을 안 건드리면 이대로
+  // 적용된다 - 기존 동작과 100% 동일하게 유지하려고 전부 1.0/중립).
+  const DEFAULT_WEIGHTS = { age: 1, posBias: 'neutral', perf: 1, fa: 1, depth: 1 };
+
+  function currentWeights() {
+    const el = (id) => document.getElementById(id);
+    return {
+      age: parseFloat(el('w-age').value),
+      posBias: el('w-posbias').value,
+      perf: parseFloat(el('w-perf').value),
+      fa: parseFloat(el('w-fa').value),
+      depth: parseFloat(el('w-depth').value),
+    };
+  }
+
+  // 포지션 얇을수록 보너스(가중치 기본 최대 +3, 실전급 3명 이상이면 보너스 없음)
+  function depthBonus(p, depthCounts, weights) {
+    const w = weights || DEFAULT_WEIGHTS;
     const g = positionGroupOf(p);
     if (!g || !depthCounts) return 0;
     const n = depthCounts[g] ?? 3;
-    return Math.max(0, 3 - n);
+    return w.depth * Math.max(0, 3 - n);
   }
 
   // 나이/올해 기회·성과/FA 잔여시즌을 조합한 기본 가치 점수(팀 상황과 무관).
-  function baseValueScore(p) {
+  // weights로 사용자가 "나이 중시" "투수 우선" 등 우선순위를 조정할 수 있다
+  // (2026-08-06 사용자 요청).
+  function baseValueScore(p, weights) {
+    const w = weights || DEFAULT_WEIGHTS;
     let score = 0;
     const age = p.age ?? 27;
-    score += 10 - Math.min(10, Math.abs(age - 26) * 0.8); // 26세 근처 피크, 멀어질수록 감점
+    score += w.age * (10 - Math.min(10, Math.abs(age - 26) * 0.8)); // 26세 근처 피크, 멀어질수록 감점
 
     const isPitcher = p.pos === '투수';
     const mlb = p.mlbStats || {}, milb = p.milbStats || {};
+    let perfScore = 0;
     if (isPitcher) {
       const ip = mlb.ip || 0;
-      score += Math.min(10, ip / 10); // 100이닝=만점
-      if (ip >= 10 && mlb.era != null) score += Math.max(-5, Math.min(8, (5.0 - mlb.era) * 2));
-      if (ip < 5 && (milb.ip || 0) > 0) score -= 1;
+      perfScore += Math.min(10, ip / 10); // 100이닝=만점
+      if (ip >= 10 && mlb.era != null) perfScore += Math.max(-5, Math.min(8, (5.0 - mlb.era) * 2));
+      if (ip < 5 && (milb.ip || 0) > 0) perfScore -= 1;
     } else {
       const pa = mlb.pa || 0;
-      score += Math.min(10, pa / 40); // 400타석=만점
-      if (pa >= 50 && mlb.ops != null) score += Math.max(-5, Math.min(8, (mlb.ops - 0.700) * 20));
-      if (pa < 20 && (milb.pa || 0) > 0) score -= 1;
+      perfScore += Math.min(10, pa / 40); // 400타석=만점
+      if (pa >= 50 && mlb.ops != null) perfScore += Math.max(-5, Math.min(8, (mlb.ops - 0.700) * 20));
+      if (pa < 20 && (milb.pa || 0) > 0) perfScore -= 1;
     }
+    score += w.perf * perfScore;
 
-    if (p.faRemaining != null) score += Math.min(4, p.faRemaining * 0.7); // 오래 잡아둘수록 보호가치 ↑
+    if (p.faRemaining != null) score += w.fa * Math.min(4, p.faRemaining * 0.7); // 오래 잡아둘수록 보호가치 ↑
     if (p.tenureYears != null) {
       if (p.tenureYears <= 1) score -= 1; // 검증 덜 된 신인급
       if (p.tenureYears >= 12) score -= 1; // 노장
     }
+    if (w.posBias === 'pitcher' && isPitcher) score += 5;
+    if (w.posBias === 'hitter' && !isPitcher) score += 5;
     return score;
   }
 
-  function reasonTags(p, depthCounts) {
+  function reasonTags(p, depthCounts, weights) {
     const tags = [];
     const age = p.age ?? 27;
     if (age <= 26) tags.push('젊은 유망주');
@@ -686,8 +780,10 @@
     const mlb = p.mlbStats || {};
     if (isPitcher ? (mlb.ip || 0) >= 50 : (mlb.pa || 0) >= 200) tags.push('올해 검증된 실전력');
     if (p.faRemaining != null && p.faRemaining >= 4) tags.push(`장기 보유 가능(FA까지 ${p.faRemaining}시즌)`);
-    const db = depthBonus(p, depthCounts);
+    const db = depthBonus(p, depthCounts, weights);
     if (db > 0) tags.push(`포지션 뎁스 보강(${positionGroupOf(p)})`);
+    if (weights && weights.posBias === 'pitcher' && isPitcher) tags.push('투수 우선 가중치 적용');
+    if (weights && weights.posBias === 'hitter' && !isPitcher) tags.push('타자 우선 가중치 적용');
     return tags;
   }
 
@@ -746,8 +842,9 @@
       // 팬심보호 지정 선수도 이미 자리를 확보했으니 점수 계산에서 제외한다.
       return !autoReason && !manualExcluded && !isAutoProtectedFA(p) && !manual.franchiseIcon;
     });
+    const weights = currentWeights();
     const scored = eligible
-      .map(p => ({ p, score: baseValueScore(p) + depthBonus(p, depthCounts) }))
+      .map(p => ({ p, score: baseValueScore(p, weights) + depthBonus(p, depthCounts, weights) }))
       .sort((a, b) => b.score - a.score);
     const cap = protectionCap();
     protectedIds.clear();
@@ -760,11 +857,27 @@
     const franchiseNote = franchiseIds.length
       ? ` "팬심보호"로 직접 지정한 ${franchiseIds.length}명은 점수와 무관하게 우선 확보했습니다.`
       : '';
-    note.innerHTML = `<b>추천 기준</b>: 나이(26세 근처 피크) · 올해 1군 기회(타석/이닝)와 성과 · ` +
+    const weightNote = (weights.age !== 1 || weights.perf !== 1 || weights.fa !== 1 || weights.depth !== 1 || weights.posBias !== 'neutral')
+      ? ' (사용자 지정 가중치 적용됨)' : '';
+    note.innerHTML = `<b>추천 기준${weightNote}</b>: 나이(26세 근처 피크) · 올해 1군 기회(타석/이닝)와 성과 · ` +
       `FA까지 남은 시즌(길수록 보호가치↑) · 포지션별 팀 뎁스(얇은 포지션 가산점)를 조합한 점수로 ` +
       `상위 ${cap}명을 자동 선택했습니다.${franchiseNote} 참고용 추천이며, 체크박스로 언제든 직접 바꿀 수 있습니다.`;
     renderRoster();
   });
+
+  // 가중치 슬라이더/선택값이 바뀌면 숫자 표시를 갱신하고, 4단계 TOP5
+  // 추천도 즉시 다시 계산해 보여준다(보호선수 체크 상태는 "추천 보호선수
+  // 자동 선택" 버튼을 눌러야만 바뀌게 해서, 슬라이더만 만졌는데 체크된
+  // 보호선수가 갑자기 바뀌는 걸 방지한다).
+  ['w-age', 'w-perf', 'w-fa', 'w-depth'].forEach(id => {
+    const input = document.getElementById(id);
+    const valSpan = document.getElementById(id + '-val');
+    input.addEventListener('input', () => {
+      valSpan.textContent = parseFloat(input.value).toFixed(2);
+      updateResult();
+    });
+  });
+  document.getElementById('w-posbias').addEventListener('change', updateResult);
 
   // 병역상태 4버킷 분류 (2026-08-06 사용자 지침 반영). "복무중"은 구단 공식
   // 데이터(이동사유=군보류, excl.military)로 최우선 판정한다. 그 지점까지
@@ -813,6 +926,38 @@
       ? `다년계약 ${p.contract.startYear}~${p.contract.endYear}(${p.contract.totalYears}년 ${p.contract.totalEok}억)`
       : '다년계약 없음';
     return `${ceText} / ${contractText}`;
+  }
+
+  // 선수명 클릭 시 펼치는 최근 5년 추이 - 에이징/실력감퇴 판단용(2026-08-06
+  // 사용자 요청). 메인 표는 그대로 두고 필요할 때만 조회하게 해서 정보량을
+  // 조절한다. ROSTER_TABLE_COLSPAN은 thead의 실제 컬럼 수와 맞춰야 한다.
+  const ROSTER_TABLE_COLSPAN = 15;
+  function buildYearlyDetailRow(p) {
+    const tr = document.createElement('tr');
+    tr.className = 'yearly-detail-row';
+    const td = document.createElement('td');
+    td.colSpan = ROSTER_TABLE_COLSPAN;
+    const isPitcher = p.pos === '투수';
+    const yearly = p.yearlyStats || [];
+    if (!yearly.length) {
+      td.innerHTML = '<div class="yearly-empty">최근 5년 연도별 기록이 없습니다.</div>';
+    } else {
+      const headCells = isPitcher
+        ? '<th class="num">이닝</th><th class="num">ERA</th><th class="num">삼진</th><th class="num">볼넷</th>'
+        : '<th class="num">타석</th><th class="num">타율</th><th class="num">OPS</th><th class="num">삼진</th>';
+      let inner = `<div class="yearly-title">${p.name} 최근 ${yearly.length}년 추이</div>` +
+        '<table class="yearly-table"><thead><tr><th>연도</th>' + headCells + '</tr></thead><tbody>';
+      for (const y of yearly) {
+        const rowCells = isPitcher
+          ? `<td class="num mono">${y.ip ?? '-'}</td><td class="num mono">${y.era ?? '-'}</td><td class="num mono">${y.so ?? '-'}</td><td class="num mono">${y.bb ?? '-'}</td>`
+          : `<td class="num mono">${y.pa ?? '-'}</td><td class="num mono">${y.avg ?? '-'}</td><td class="num mono">${y.ops ?? '-'}</td><td class="num mono">${y.so ?? '-'}</td>`;
+        inner += `<tr><td class="mono">${y.year}</td>${rowCells}</tr>`;
+      }
+      inner += '</tbody></table>';
+      td.innerHTML = inner;
+    }
+    tr.appendChild(td);
+    return tr;
   }
 
   function autoExclusionReason(p) {
@@ -938,7 +1083,13 @@
       tr.appendChild(tdRank);
 
       const tdName = document.createElement('td');
-      tdName.className = 'name'; tdName.textContent = p.name;
+      tdName.className = 'name expandable-name'; tdName.textContent = p.name;
+      tdName.title = '클릭하면 최근 5년 연도별 성적을 볼 수 있습니다';
+      tdName.addEventListener('click', () => {
+        if (expandedIds.has(p.playerId)) expandedIds.delete(p.playerId);
+        else expandedIds.add(p.playerId);
+        renderRoster();
+      });
       tr.appendChild(tdName);
 
       const tdPos = document.createElement('td'); tdPos.textContent = p.posDetail ? `${p.pos}(${p.posDetail})` : p.pos; tr.appendChild(tdPos);
@@ -990,6 +1141,7 @@
       tr.appendChild(tdManual);
 
       tbody.appendChild(tr);
+      if (expandedIds.has(p.playerId)) tbody.appendChild(buildYearlyDetailRow(p));
     }
     updateResult();
   }
@@ -1060,8 +1212,9 @@
     // 보너스를 더해 정렬한다(2026-08-06 사용자 요청).
     const originRoster = byTeam[originSel.value] || [];
     const originDepth = computeTeamDepth(originRoster);
+    const weights = currentWeights();
     const top5 = candidates
-      .map(p => ({ p, score: baseValueScore(p) + depthBonus(p, originDepth) }))
+      .map(p => ({ p, score: baseValueScore(p, weights) + depthBonus(p, originDepth, weights) }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
@@ -1069,9 +1222,9 @@
       + `<div class="result-empty" style="margin-bottom:10px">${destSel.value} 로스터 중 보상선수로 지명 가능한 인원</div>`;
 
     html += `<div style="font-weight:800;font-size:13px;margin:14px 0 8px">추천 TOP 5 <span style="font-weight:400;color:var(--muted);font-size:11.5px">` +
-      `(팀 상황 무관 기본 가치 + ${originSel.value || '원소속구단'} 뎁스 보강 보너스)</span></div>`;
+      `(팀 상황 무관 기본 가치 + ${originSel.value || '원소속구단'} 뎁스 보강 보너스 · 상단 "추천 가중치 설정" 반영)</span></div>`;
     for (const { p } of top5) {
-      const tags = reasonTags(p, originDepth);
+      const tags = reasonTags(p, originDepth, weights);
       html += `<div class="reco-card"><div class="reco-name">${p.name} <span style="font-weight:400;color:var(--muted);font-size:11.5px">` +
         `${p.pos}${p.posDetail ? '(' + p.posDetail + ')' : ''} · ${p.level} · 나이 ${p.age ?? '-'} · ${p.salary_manwon.toLocaleString()}만원</span></div>` +
         (tags.length ? tags.map(t => `<span class="reco-tag">${t}</span>`).join('') : '<span class="reco-tag" style="opacity:.6">특별 강점 태그 없음</span>') +
