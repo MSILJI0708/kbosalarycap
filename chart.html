@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KBO 2026 경쟁균형세 현황</title>
-</head>
-<body>
+<title>KBO 샐러리캡 2027-2031</title>
 <style>
+
   :root {
     --page:        #eef0f5;
     --card:        #ffffff;
@@ -496,113 +495,279 @@
     tfoot td { font-size: 10.5px; padding: 4px 6px; }
     .badge { font-size: 10px; padding: 1px 6px; }
   }
-</style>
 
+  /* ---------- 2027~2031 예상 지출 (추가분) ---------- */
+  :root { --k-guar: var(--accent); --k-opt: var(--cat-3); --k-pred: var(--cat-1); }
+  .control-field select:disabled { opacity: .6; cursor: default; }
+  .chapter-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+  .year-card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 16px 18px 12px; margin-bottom: 28px; }
+  .yr-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); margin: 0 0 12px; }
+  .yr-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .yr-row { display: grid; grid-template-columns: 64px minmax(0,1fr) 128px; gap: 12px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); cursor: pointer; }
+  .yr-row:first-of-type { border-top: 0; }
+  .yr-row.active .yr-y { color: var(--accent); }
+  .yr-row:hover { background: var(--row-stripe); }
+  .yr-y { font-family: var(--font-mono); font-weight: 800; font-size: 15px; }
+  .yr-y small { display: block; font-family: var(--font-body); font-size: 10.5px; font-weight: 600; color: var(--muted); }
+  .yr-track { position: relative; height: 18px; background: var(--badge-min-bg); border-radius: 4px; display: flex; overflow: visible; }
+  .yr-track span { display: block; height: 100%; }
+  .yr-track span:first-child { border-radius: 4px 0 0 4px; }
+  .yr-track .cap { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--ink); }
+  .yr-track .cap.assumed { background: repeating-linear-gradient(var(--ink) 0 3px, transparent 3px 6px); }
+  .yr-track .floor { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--muted); }
+  .yr-val { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .yr-val small { display: block; font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--ink-2); }
+  .yr-val small.good { color: var(--good); } .yr-val small.critical { color: var(--critical); }
+  .k-G { background: var(--k-guar); } .k-O { background: repeating-linear-gradient(45deg, var(--k-opt) 0 4px, color-mix(in srgb, var(--k-opt) 55%, var(--card)) 4px 7px); } .k-P { background: var(--k-pred); }
+  td.yc { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.yc.sel { background: color-mix(in srgb, var(--accent) 7%, transparent); font-weight: 700; }
+  td.yc .c-P { color: var(--k-pred); font-style: italic; }
+  td.yc .c-D { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 50%, transparent); }
+  td.yc .c-O { color: color-mix(in srgb, var(--k-opt) 80%, var(--ink)); }
+  td.yc .c-none { color: var(--row-dim); }
+  td.yc .est { text-decoration: underline dotted; text-underline-offset: 3px; }
+  td.yc .st { font-family: var(--font-body); font-size: 11px; font-weight: 700; color: var(--accent); }
+  .badge.opt { background: color-mix(in srgb, var(--k-opt) 18%, var(--card)); color: color-mix(in srgb, var(--k-opt) 75%, var(--ink)); }
+  .badge.pred { background: color-mix(in srgb, var(--k-pred) 16%, var(--card)); color: var(--k-pred); }
+  .badge.ex { background: var(--badge-gen-bg); color: var(--badge-gen-tx); }
+  .gone-card { margin-top: 28px; }
+  .gone-card table { min-width: 520px; }
+  .fix-list { margin: 6px 0 0; padding-left: 18px; }
+
+  /* ---------- 탭 / 커스텀 계약 ---------- */
+  .tabbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 18px; border-bottom: 1px solid var(--line); }
+  .tabbar button { font: inherit; font-weight: 700; font-size: 14px; padding: 10px 14px; min-height: 44px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--ink-2); cursor: pointer; }
+  .tabbar button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .tabbar button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tabbar .cc-toggle { margin-left: auto; font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+  .count-pill { display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+  .btn { font: inherit; font-size: 13px; font-weight: 700; min-height: 36px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.danger { color: var(--critical); }
+  .btn.sm { min-height: 28px; padding: 2px 8px; font-size: 12px; }
+  .cc-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .cc-head .store { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .cc-empty { padding: 28px; text-align: center; color: var(--muted); }
+  .cc-type { font-weight: 800; font-size: 12px; white-space: nowrap; }
+  #cc-body td.name, #cc-body td:nth-child(3), #cc-body td:nth-child(5) { white-space: nowrap; }
+  .cc-type.trade { color: var(--accent); } .cc-type.new { color: var(--good); } .cc-type.edit { color: var(--k-opt); } .cc-type.delete { color: var(--critical); }
+  td.yc .cu { box-shadow: inset 0 -2px 0 var(--accent); }
+  .row-act { margin-left: 6px; opacity: .55; }
+  tr:hover .row-act { opacity: 1; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-start; justify-content: center; padding: 24px 12px; overflow-y: auto; z-index: 50; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--card); color: var(--ink); border-radius: 12px; width: min(720px, 100%); padding: 20px 22px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .modal h3 { margin: 0 0 12px; font-size: 20px; }
+  .fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 14px; }
+  .fgrid label, .frow label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--ink-2); }
+  .fgrid input, .fgrid select, .frow input, .frow select, .frow textarea { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--control-bg); color: var(--control-tx); min-height: 40px; color-scheme: light dark; }
+  .fgrid input::placeholder, .frow input::placeholder, .frow textarea::placeholder { color: var(--muted); opacity: 1; }
+  .fgrid select option, .frow select option { background: var(--control-bg); color: var(--control-tx); }
+  .frow { margin: 10px 0; }
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .seg label { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .seg input { accent-color: var(--accent); }
+  .preview { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--row-stripe); font-size: 13px; line-height: 1.6; }
+  .preview b { font-family: var(--font-mono); }
+  .ferr { color: var(--critical); font-size: 13px; min-height: 18px; margin-top: 8px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+  .hint { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .modal.wide { width: min(1000px, 100%); }
+  .tr-grid { display: grid; grid-template-columns: minmax(0,1fr) 28px minmax(0,1fr); gap: 10px; align-items: start; margin-top: 4px; }
+  .tr-swap { align-self: center; text-align: center; font-size: 22px; color: var(--muted); }
+  .tr-side { border: 1px solid var(--line-strong); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .tr-side input, .tr-side select { font: inherit; font-size: 16px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--control-bg); color: var(--control-tx); min-height: 38px; color-scheme: light dark; width: 100%; box-sizing: border-box; }
+  .tr-side input::placeholder { color: var(--muted); opacity: 1; }
+  .tr-side select option { background: var(--control-bg); color: var(--control-tx); }
+  .tr-side .team-sel { font-weight: 800; font-size: 17px; }
+  .tr-sec-h { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+  .tr-items { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .tr-items li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--row-stripe); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+  .tr-items li .amt { margin-left: auto; font-family: var(--font-mono); color: var(--ink-2); white-space: nowrap; }
+  .tr-items li .sub { color: var(--muted); font-size: 12px; }
+  .x-btn { border: 0; background: transparent; color: var(--muted); font-size: 16px; line-height: 1; cursor: pointer; padding: 2px 4px; }
+  .x-btn:hover { color: var(--critical); }
+  .pick-row { display: grid; grid-template-columns: 104px 112px minmax(0,1fr) auto; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .chip { border: 1px solid var(--line-strong); background: transparent; color: var(--ink); border-radius: 14px; padding: 4px 10px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip.fixed { cursor: default; }
+  .chip-hint { font-size: 11px; color: var(--critical); font-weight: 700; }
+  .tr-delta { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin-top: 8px; }
+  .tr-delta div { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .tr-delta .over { color: var(--critical); font-weight: 800; }
+  @media (max-width: 760px) { .tr-grid { grid-template-columns: minmax(0,1fr); } .tr-swap { transform: rotate(90deg); } .pick-row { grid-template-columns: 1fr 1fr auto; grid-template-areas: "y r x" "c c c"; }
+    .pick-row > :nth-child(1) { grid-area: y; } .pick-row > :nth-child(2) { grid-area: r; } .pick-row > :nth-child(3) { grid-area: c; } .pick-row > :nth-child(4) { grid-area: x; } }
+  .rate-note { font-size: 11px; color: var(--critical); font-weight: 700; }
+  @media (max-width: 640px) {
+    .yr-row { grid-template-columns: 48px minmax(0,1fr) 92px; gap: 6px; }
+    .yr-val { font-size: 12.5px; } .yr-val small { font-size: 10px; }
+    .year-card { padding: 8px 8px 6px; margin-bottom: 12px; }
+  }
+</style>
+</head>
+<body>
 <div class="hero" id="hero">
   <div class="hero-inner">
-    <div class="chapter-nav"><a href="fa.html">FA 서비스타임 현황 보기 →</a><a href="comp.html">FA 보상선수 시뮬레이터 →</a></div>
+    <div class="chapter-nav"><a href="chart2026.html">← 2026 경쟁균형세 현황</a><a href="fa.html">FA 서비스타임 현황 보기 →</a><a href="comp.html">FA 보상선수 시뮬레이터 →</a></div>
     <div class="controls">
       <div class="control-field">
         <label for="season-select">Season</label>
-        <select id="season-select" disabled>
-          <option>2026</option>
-        </select>
+        <select id="season-select"></select>
       </div>
       <div class="control-field">
         <label for="team-select">Team</label>
         <select id="team-select"></select>
       </div>
     </div>
-    <p class="eyebrow">KBO 샐러리캡(경쟁균형세) 근사 리포트 &middot; <strong>2026 시즌</strong></p>
+    <p class="eyebrow">KBO 샐러리캡(경쟁균형세) 예상 지출 &middot; <strong id="eyebrow-year">2027 시즌</strong></p>
     <h1 class="team" id="team-title">-</h1>
-    <p class="team-sub">
-      경쟁균형세는 전체 보류선수 중 연봉 상위 40인의 합계를 기준으로 계산됩니다.
-      아래 순위는 등록 여부와 무관하게 이 시즌 소속됐던 선수 전체를 대상으로 하며,
-      트레이드/웨이버/임의해지/군보류/자유계약선수로 이탈한 선수는 이탈 시점까지의
-      잔여연봉만 반영돼 있습니다.
-    </p>
+    <p class="team-sub" id="team-sub"></p>
   </div>
 </div>
 
 <div class="wrap">
+  <div class="tabbar" role="tablist">
+    <button type="button" role="tab" id="tab-btn-team" aria-selected="true" data-tab="team">구단별 현황</button>
+    <button type="button" role="tab" id="tab-btn-custom" aria-selected="false" data-tab="custom">커스텀 계약<span class="count-pill" id="cc-count">0</span></button>
+    <label class="cc-toggle"><input type="checkbox" id="cc-apply" checked> 커스텀 계약 반영</label>
+  </div>
+  <section id="tab-custom" hidden>
+    <div class="cc-head">
+      <button type="button" class="btn primary" id="cc-new">+ 새 계약 만들기</button>
+      <button type="button" class="btn primary" id="cc-trade">⇄ 트레이드</button>
+      <button type="button" class="btn" id="cc-copy">JSON 복사</button>
+      <button type="button" class="btn" id="cc-import">JSON 가져오기</button>
+      <span class="store" id="cc-store">저장 위치 확인 중…</span>
+    </div>
+    <div class="table-card"><div class="table-scroll" style="max-height:none">
+      <table><thead><tr><th>구분</th><th>선수</th><th>구단</th><th>기간</th><th class="num">총액</th><th>구성 (억)</th><th>연도별 산정액 (억)</th><th>메모</th><th></th></tr></thead>
+      <tbody id="cc-body"></tbody></table>
+    </div></div>
+    <p class="hint" style="margin-top:10px">새 계약·수정 계약은 2026년 이후 체결로 보고 "(계약금 + 보장 연봉) ÷ 보장연수 + 옵션 ÷ 보장연수"로 계산합니다. 연도별 산정액을 직접 넣으면 그 값을 씁니다.
+      다른 구단으로 옮기는 계약이면 계약 시작 시즌부터 원소속 구단의 계약·재계약 예측이 빠집니다. 옵션 연장 구간(조건부)은 연장 연수만큼 따로 붙습니다.</p>
+  </section>
+  <section id="tab-team">
   <div class="league-strip" id="league-strip"></div>
-
   <div class="tiles" id="tiles"></div>
 
   <div class="section-head">
-    <h2>연봉 구성 비율</h2>
-    <span class="section-note">두 원그래프 모두 아래 토글에 따라 값이 바뀝니다</span>
+    <h2>연도별 상위 40인 합계</h2>
+    <span class="section-note">연도를 누르면 위 시즌이 바뀝니다 · 2028년 이후는 이미 계약된 금액만</span>
   </div>
-  <div class="toggle-row">
-    <div class="toggle-group">
-      <span class="toggle-group-label">기준</span>
-      <button class="toggle-btn active" data-toggle="mode" data-value="real" type="button">실지급</button>
-      <button class="toggle-btn" data-toggle="mode" data-value="cap" type="button">샐러리캡</button>
+  <div class="year-card">
+    <div class="yr-legend">
+      <span><i class="k-G"></i>보장 계약(다년·단년)</span>
+      <span><i class="k-O"></i>옵션 연장 구간(조건부)</span>
+      <span><i class="k-P"></i>2027 재계약 예측</span>
+      <span><i style="width:2px;height:12px;background:var(--ink)"></i>상한</span>
+      <span><i style="width:2px;height:12px;background:repeating-linear-gradient(var(--ink) 0 3px,transparent 3px 6px)"></i>상한 미정(연 5% 인상 가정)</span>
+      <span><i style="width:1px;height:12px;background:var(--muted)"></i>하한</span>
     </div>
-    <div class="toggle-group">
-      <span class="toggle-group-label">파이 기준값</span>
-      <button class="toggle-btn active" data-toggle="basis" data-value="spend" type="button">총지출 비중</button>
-      <button class="toggle-btn" data-toggle="basis" data-value="count" type="button">인원수</button>
-    </div>
-  </div>
-
-  <div class="pie-grid">
-    <div class="pie-card">
-      <h3>상대적 &middot; 연봉 순위 구간</h3>
-      <p class="pie-sub" id="rank-pie-sub"></p>
-      <div class="pie-body">
-        <div class="pie-svg-wrap"><svg id="rank-pie-svg" viewBox="0 0 100 100"></svg></div>
-        <div class="pie-legend" id="rank-pie-legend"></div>
-      </div>
-    </div>
-    <div class="pie-card">
-      <h3>절대적 &middot; 연봉 구간(억원)</h3>
-      <p class="pie-sub" id="abs-pie-sub"></p>
-      <div class="pie-body">
-        <div class="pie-svg-wrap"><svg id="abs-pie-svg" viewBox="0 0 100 100"></svg></div>
-        <div class="pie-legend" id="abs-pie-legend"></div>
-      </div>
-    </div>
+    <div id="year-rows"></div>
   </div>
 
   <div class="section-head">
-    <h2>전체 보류선수 연봉 명단</h2>
+    <h2>선수별 연도 계약 현황</h2>
     <span class="section-note" id="table-note"></span>
   </div>
-
   <div class="table-card">
     <div class="table-scroll">
       <table id="roster-table">
-        <thead>
-          <tr>
-            <th data-key="rank" class="num sorted">순위<span class="arrow">▼</span></th>
-            <th data-key="name">선수명<span class="arrow">▼</span></th>
-            <th data-key="pos">포지션<span class="arrow">▼</span></th>
-            <th data-key="age" class="num">나이<span class="arrow">▼</span></th>
-            <th data-key="years" class="num">소속연차<span class="arrow">▼</span></th>
-            <th data-key="type">구분<span class="arrow">▼</span></th>
-            <th data-key="salary_manwon" class="num">연봉<span class="arrow">▼</span></th>
-            <th data-key="cap_pct" class="num">상한액 대비<span class="arrow">▼</span></th>
-          </tr>
-        </thead>
+        <thead><tr id="thead-row"></tr></thead>
         <tbody id="roster-body"></tbody>
-        <tfoot>
-          <tr><td colspan="8" id="table-foot"></td></tr>
-        </tfoot>
+        <tfoot><tr><td colspan="11" id="table-foot"></td></tr></tfoot>
       </table>
     </div>
   </div>
 
-  <footer class="disclaimer">
-    ⚠ 근사치입니다. <strong>실지급</strong>은 KBO 개인페이지 공시연봉(트레이드 등 이탈 선수는 이탈 시점까지의
-    잔여연봉), <strong>샐러리캡</strong>은 여기에 다년계약 조정연봉(수기 조사한 <code>multi_year_contracts.csv</code>
-    기준)까지 반영한 값입니다 — 계약체결일이 2026년인 구간은 "그 구간 계약총액 / 계약연수"(AAV), 2025년
-    이전 구간은 "그 구간의 (계약금+옵션)/계약연수 + 해당연도 공시연봉"으로 계산했습니다. "다년계약" 뱃지가
-    붙은 선수가 이 조정이 적용된 선수입니다. "구분"의 <strong>최저연봉</strong>은 연봉 3,000만원(KBO 리그
-    최저연봉) 이하 선수를 표시한 단순 분류이며 실제 서비스타임/FA/연봉조정 등급과는 다릅니다. "이동" 뱃지가
-    붙은 선수는 시즌 중 트레이드/웨이버/임의해지/군보류/자유계약선수로 팀을 떠난 선수입니다. 외국인선수
-    (자유선발·아시아쿼터)는 명단에서 제외되어 있습니다.
+  <div class="gone-card">
+    <div class="section-head">
+      <h2>2026 시즌 후 팀을 떠나는 선수</h2>
+      <span class="section-note">FA 자격 취득(잔류 미정)·방출·이적 · 2027 계산에서 제외</span>
+    </div>
+    <div class="table-card"><div class="table-scroll" style="max-height:none">
+      <table><thead><tr><th>선수명</th><th>포지션</th><th class="num">나이(2027)</th><th class="num">2026 산정액</th><th>상태</th></tr></thead>
+      <tbody id="gone-body"></tbody></table>
+    </div></div>
+  </div>
+
+  </section>
+  <footer class="disclaimer" id="disclaimer">
+    ⚠ 예상치입니다. 금액은 KBO 규약 제184조 경쟁균형세 산정액(만원) 기준입니다.
+    <strong>2027</strong>은 다년계약 확정분과 재계약 대상자의 예측 연봉(성적·구단 상황 모델, 상한 초과 구단은 인상분 축소) 중 상위 40인,
+    <strong>2028~2031</strong>은 이미 계약된 금액만이라 재계약·신규 FA가 더해지면 실제 지출은 커집니다.
+    다년계약은 체결 시점에 따라 나눴습니다. <strong>2026년 이전 체결</strong>은 "그 시즌 실제 지급 연봉 + 계약금 ÷ 보장연수(옵션 연장 구간 제외) + 옵션"이고,
+    시즌별 연봉은 KBO 공시·구단 발표·지인 시트 확정값으로 확인되는 해는 실제 값, 나머지 해는 보장연봉 총액에서 확인된 연봉을 뺀 잔액을 균등 분배해 추정했습니다(표의 점선 밑줄).
+    <strong>2026년 이후 체결</strong>은 "(총액 − 옵션) ÷ 연수 + 옵션"입니다. 옵션 실지급액은 12월 구단별 정산 총합에서 역산해야 하지만 아직 알 수 없어, 옵션총액 ÷ 연수를 기본으로 두고 <strong>옵션 실행률</strong>을 정했습니다: 옵션을 전부 줘도 상한 이내면 100%, 상한을 넘기면 상위 40인 합계가 딱 상한이 되는 비율까지만 실행합니다. 실제 정산 결과가 나오면 다시 맞출 예정입니다.
+    트레이드된 선수의 계약은 현 소속 구단으로 셌습니다(시즌 중 이적이면 그 시즌 계약금 몫은 원소속 구단 전액, 연봉은 이적일 기준 잔여 경기 비율로 나눔).
+    옵트아웃한 선수(예: 함덕주 2027)는 연봉·옵션 없이 남은 보장 연도의 계약금 몫만 원소속 구단에 남깁니다.
+    예외선수(제185조)는 해마다 그 구단 7시즌 이상 소속 선수(2026 소속 시즌 수에 1년씩 더함) 중 산정액이 가장 큰 1명을 다시 골라 상한 계산에서만 50% 감면했습니다. 하한(60억 6,538만원, 2027~)은 감면 없이, 옵션 미지급 기준으로 비교합니다.
+    2029년 이후 상한은 아직 발표되지 않았습니다. 외국인·신인 선수, 데이터 수집일 이후 발표된 FA·다년계약은 포함돼 있지 않습니다.
+    <span id="fix-wrap"></span>
   </footer>
+</div>
+
+<div class="modal-bg" id="cc-modal" role="dialog" aria-modal="true" aria-labelledby="cc-title">
+  <div class="modal">
+    <h3 id="cc-title">계약 만들기</h3>
+    <div class="seg" id="f-type">
+      <label><input type="radio" name="ftype" value="new" checked> 새 계약</label>
+      <label><input type="radio" name="ftype" value="edit"> 기존 계약 수정</label>
+      <label><input type="radio" name="ftype" value="delete"> 계약 삭제</label>
+    </div>
+    <div class="frow"><label>선수 <span class="hint">이름을 입력해 고르세요. 명단에 없는 선수는 이름만 적으면 새로 만듭니다.</span>
+      <input id="f-player" list="f-players" autocomplete="off" placeholder="예: 원태인"></label>
+      <datalist id="f-players"></datalist></div>
+    <div class="frow" id="f-orig-wrap" hidden><label>대상 계약 <select id="f-orig"></select></label></div>
+    <div class="fgrid" id="f-terms">
+      <label>구단 <select id="f-team"></select></label>
+      <label>계약 시작 시즌 <select id="f-start"></select></label>
+      <label>보장 연수 <input id="f-years" type="number" min="1" max="15" step="1" value="4"></label>
+      <label>계약금 (억) <input id="f-bonus" type="number" min="0" step="0.1" value="0"></label>
+      <label>보장 연봉 총액 (억) <input id="f-salary" type="number" min="0" step="0.1" value="0"></label>
+      <label>보장 기간 옵션 (억) <input id="f-option" type="number" min="0" step="0.1" value="0"></label>
+      <label>옵션 연장 연수 <input id="f-oyears" type="number" min="0" max="5" step="1" value="0"></label>
+      <label>옵션 연장 금액 (억) <input id="f-oamount" type="number" min="0" step="0.1" value="0"></label>
+    </div>
+    <div class="frow"><label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="f-peryear-on"> 연도별 산정액 직접 입력</label>
+      <input id="f-peryear" placeholder="억 단위, 쉼표로 구분 (보장 연도 다음 옵션 연장 연도 순)" hidden></div>
+    <div class="frow"><label>메모 <input id="f-note" maxlength="200" placeholder="예: 2026 FA 이적 가정"></label></div>
+    <div class="preview" id="f-preview"></div>
+    <div class="ferr" id="f-err"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="f-cancel">취소</button>
+      <button type="button" class="btn primary" id="f-save">저장</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="tr-modal" role="dialog" aria-modal="true" aria-labelledby="tr-title">
+  <div class="modal wide">
+    <h3 id="tr-title">트레이드</h3>
+    <div class="frow"><label>트레이드 시점 <span class="hint">오프시즌 트레이드: 그 시즌부터 선수의 연봉 프로젝션과 남은 계약금 몫을 받는 구단이 모두 부담합니다.</span>
+      <select id="t-season"></select></label></div>
+    <div class="tr-grid">
+      <div class="tr-side" id="t-side-A" data-side="A"></div>
+      <div class="tr-swap" aria-hidden="true">⇄</div>
+      <div class="tr-side" id="t-side-B" data-side="B"></div>
+    </div>
+    <div class="frow"><label>메모 <input id="t-note" maxlength="200" placeholder="예: 불펜 보강용 가정"></label></div>
+    <div class="preview" id="t-preview"></div>
+    <div class="ferr" id="t-err"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="t-cancel">취소</button>
+      <button type="button" class="btn primary" id="t-save">저장</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="io-modal" role="dialog" aria-modal="true" aria-labelledby="io-title">
+  <div class="modal">
+    <h3 id="io-title">JSON 가져오기</h3>
+    <p class="hint">다른 곳에서 복사한 커스텀 계약 JSON을 붙여 넣으세요. 같은 id의 계약은 덮어씁니다.</p>
+    <div class="frow"><textarea id="io-text" rows="8" style="width:100%"></textarea></div>
+    <div class="ferr" id="io-err"></div>
+    <div class="modal-actions"><button type="button" class="btn" id="io-cancel">취소</button><button type="button" class="btn primary" id="io-ok">가져오기</button></div>
+  </div>
 </div>
 
 <script id="team-meta-data" type="application/json">
@@ -610,238 +775,881 @@
 </script>
 <script>
 (async function () {
+  const D = await fetch('projection.json').then(r => r.json());
   const teamMeta = JSON.parse(document.getElementById('team-meta-data').textContent);
-  const [allTeams, pieData] = await Promise.all([
-    fetch('dashboard.json').then(r => r.json()),
-    fetch('pie.json').then(r => r.json()),
-  ]);
-  const CAT_SLOTS = ['--cat-1', '--cat-2', '--cat-3', '--cat-4', '--cat-5', '--cat-6'];
-  let pieMode = 'real';   // 'real'(실지급) | 'cap'(샐러리캡)
-  let pieBasis = 'spend'; // 'spend'(총지출 비중) | 'count'(인원수)
-  const teamOrder = Object.keys(allTeams).sort(
-    (a, b) => allTeams[a].modes[pieMode].summary.league_rank - allTeams[b].modes[pieMode].summary.league_rank
-  );
-
-  const fmtEok = (manwon) => (manwon / 10000).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const YEARS = D.years, ALL_YEARS = [2026, ...D.years];
+  const TEAMS = Object.keys(D.teams);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmtEok = (m) => (m / 10000).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const fmtEok2 = (m) => (m / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 2 });
   const fmtManwon = (m) => Math.round(m).toLocaleString('ko-KR');
+  const capOf = (y) => D.cap[y] ?? Math.round(D.cap[2028] * 1.05 ** (y - 2028));
+  const capKnown = (y) => D.cap[y] != null;
+  const KIND = { G: '보장', O: '옵션연장', P: '예측', S: '단년계약', D: '옵트아웃 잔여 계약금' };
+  const num = (v) => { const x = parseFloat(v); return Number.isFinite(x) ? x : 0; };
 
-  const select = document.getElementById('team-select');
-  select.innerHTML = teamOrder.map(t => `<option value="${t}">${teamMeta[t].full}</option>`).join('');
+  // ---------------- 커스텀 계약 저장소 ----------------
+  // 계정에 저장(claude db, 본인만 보는 data/users/<id>/ 아래) > 안 되면 이 브라우저(localStorage)
+  const LS_KEY = 'kbo-cap-custom-contracts-v1';
+  const store = {
+    mode: 'local', col: null, items: [],
+    loadLocal() { try { const t = localStorage.getItem(LS_KEY); return t ? JSON.parse(t) : []; } catch (e) { return []; } },
+    saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.items)); } catch (e) { /* 저장 불가: 무시 */ } },
+    async init(onChange) {
+      this.items = this.loadLocal();
+      onChange();
+      const c = window.claude;
+      if (!c || typeof c.use !== 'function') { setStoreNote(); return; }
+      try {
+        const [db, user] = await Promise.all([c.use('db'), c.use('user')]);
+        const uid = user ? await user.id() : null;
+        if (!db || !uid) { setStoreNote(); return; }
+        this.col = db.doc('data/users/' + uid + '/kbo_cap').collection('custom_contracts');
+        const timer = setTimeout(() => setStoreNote('계정 저장소 응답이 늦어 이 브라우저 기록을 보여주는 중'), 10000);
+        const snap = await this.col.get();
+        clearTimeout(timer);
+        const remote = snap.docs.filter(d => d.exists).map(d => ({ ...d.data() }));
+        this.mode = 'db';
+        if (remote.length === 0 && this.items.length) {        // 브라우저에만 있던 기록은 계정으로 옮긴다
+          for (const it of this.items) await this.col.doc(it.id).set(it);
+        } else {
+          this.items = remote;
+          this.saveLocal();
+        }
+        setStoreNote();
+        onChange();
+      } catch (e) { this.mode = 'local'; this.col = null; setStoreNote('계정 저장소에 연결하지 못해 이 브라우저에 저장합니다'); }
+    },
+    async put(it) {
+      const i = this.items.findIndex(x => x.id === it.id);
+      if (i >= 0) this.items[i] = it; else this.items.push(it);
+      this.saveLocal();
+      if (this.col) { try { await this.col.doc(it.id).set(it); } catch (e) { setStoreNote('계정 저장 실패: 이 브라우저에만 저장됨'); } }
+    },
+    async remove(id) {
+      this.items = this.items.filter(x => x.id !== id);
+      this.saveLocal();
+      if (this.col) { try { await this.col.doc(id).delete(); } catch (e) { setStoreNote('계정에서 지우지 못함: 이 브라우저에서만 지워짐'); } }
+    },
+  };
+  function setStoreNote(msg) {
+    const el = document.getElementById('cc-store');
+    if (!el) return;
+    el.textContent = msg || (store.mode === 'db' ? '내 계정에 저장됨 (나만 보임)' : '이 브라우저에만 저장됨 · 다른 기기로 옮기려면 JSON 복사');
+  }
 
-  let sortKey = 'rank';
-  let sortAsc = true;
-  let currentTeam = teamOrder[0];
+  // ---------------- 모델 계산 (기본 데이터 + 커스텀 계약) ----------------
+  let M = null;
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  function customCells(c) {
+    const out = {};
+    const n = Math.max(1, Math.round(c.years || 1)), oy = Math.max(0, Math.round(c.optYears || 0));
+    const end = c.start + n + oy - 1;
+    const optShare = num(c.option) / n * 1e4;
+    if (Array.isArray(c.perYear) && c.perYear.length) {
+      c.perYear.forEach((e, i) => {
+        const y = c.start + i, isExt = i >= n, v = num(e) * 1e4;
+        out[y] = { v, lo: isExt ? v : Math.max(0, v - optShare), k: isExt ? 'O' : 'G', end, m: '커스텀', cu: c.id, opt: isExt ? 0 : Math.min(v, optShare) };
+      });
+      return out;
+    }
+    const base = (num(c.bonus) + num(c.salary)) / n * 1e4;
+    for (let i = 0; i < n; i++) out[c.start + i] = { v: base + optShare, lo: base, k: 'G', end, m: '커스텀', cu: c.id, opt: optShare };
+    for (let i = 0; i < oy; i++) { const v = num(c.optAmount) / oy * 1e4; out[c.start + n + i] = { v, lo: v, k: 'O', end, m: '커스텀', cu: c.id }; }
+    return out;
+  }
+
+  // 신인 지명권: N년 드래프트는 N-2년 최종순위 역순, 모든 라운드 같은 순서
+  const PICK_YEARS = Object.keys(D.draft || {}).map(Number).sort((a, b) => a - b);
+  const ROUNDS = D.draft_rounds || 11;
+  const pickKey = (pk) => `${pk.year}|${pk.round}|${pk.orig}`;
+  const pickOverall = (pk) => { const o = D.draft?.[pk.year]; const s = o ? o.indexOf(pk.orig) + 1 : 0; return s ? (pk.round - 1) * TEAMS.length + s : null; };
+  const pickText = (pk, holder) => `${pk.year} ${pk.round}R ` + (pickOverall(pk) ? `전체 ${pickOverall(pk)}순위` : '순번 미정') + (holder && pk.orig !== holder ? ` (${pk.orig} 지명권)` : '');
+  const sortedItems = (list) => [...list].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+  function applyTrade(T, c, picks, warns) {
+    const y0 = c.season;
+    for (const [from, to, side] of [[c.teamA, c.teamB, c.sideA || {}], [c.teamB, c.teamA, c.sideB || {}]]) {
+      for (const pid of side.players || []) {
+        const src = T[from].players.find(p => p.pid === pid && Object.entries(p.cells).some(([y, cl]) => +y >= y0 && cl.k !== 'D'));
+        if (!src) { warns.push(`트레이드(${from}↔${to}): ${pid}는 ${y0}년에 ${from} 소속이 아닙니다`); continue; }
+        let dst = T[to].players.find(p => p.pid === pid);
+        if (!dst) {
+          const g = T[to].gone.find(x => x.pid === pid);
+          dst = { ...src, cells: {}, ex: false, y2026: null, ten: g?.ten || 0, ct: (src.ct || []).map(x => ({ ...x, team: to })), custom: null, tradeOut: null, tradeIn: null };
+          T[to].players.push(dst);
+        }
+        // 공시 전까지는 직전 프로젝션(재계약 예측·계약 산정액)을 그대로, 계약금 몫도 받는 구단이 전부 (옵트아웃 잔여분은 원소속 구단에 남김)
+        for (const y of Object.keys(src.cells).map(Number)) {
+          const cl = src.cells[y];
+          if (y >= y0 && cl.k !== 'D') { dst.cells[y] = { ...cl, tr: c.id, trFrom: from }; delete src.cells[y]; }
+        }
+        src.tradeOut = to; src.custom = c.id; dst.tradeIn = from; dst.custom = c.id;
+        for (const g of T[to].gone) if (g.pid === pid) g.hide = true;
+      }
+      for (const pk of side.picks || []) {
+        const k = pickKey(pk);
+        if (picks.get(k) !== from) warns.push(`트레이드(${from}↔${to}): ${pickText(pk)}을 ${from}가 갖고 있지 않습니다`);
+        else picks.set(k, to);
+      }
+    }
+  }
+
+  function compute() {
+    const applyOn = document.getElementById('cc-apply')?.checked !== false;
+    M = buildModel(applyOn ? sortedItems(store.items) : []);
+  }
+
+  function buildModel(items) {
+    const T = {};
+    for (const t of TEAMS) {
+      const b = D.teams[t];
+      T[t] = { y2026: b.y2026, ex: b.ex, players: b.players.map(p => ({ ...p, cells: clone(p.cells), custom: null })), gone: b.gone.map(g => ({ ...g })) };
+    }
+    const holders = (pid) => TEAMS.flatMap(t => T[t].players.filter(p => p.pid === pid).map(p => [t, p]));
+    const goneOf = (pid) => TEAMS.flatMap(t => T[t].gone.filter(g => g.pid === pid).map(g => [t, g]));
+    const picks = new Map(), warns = [];
+    for (const y of PICK_YEARS) for (let r = 1; r <= ROUNDS; r++) for (const t of TEAMS) picks.set(pickKey({ year: y, round: r, orig: t }), t);
+    for (const c of items) {
+      if (c.type === 'trade') { applyTrade(T, c, picks, warns); continue; }
+      const hs = holders(c.pid);
+      if (c.type === 'delete') {
+        for (const [, p] of hs) {
+          for (let y = c.origStart; y <= c.origEnd; y++) { const cell = p.cells[y]; if (cell && 'GOSD'.includes(cell.k)) delete p.cells[y]; }
+          p.custom = c.id;
+        }
+        continue;
+      }
+      const cells = customCells(c);
+      const ys = Object.keys(cells).map(Number);
+      for (const [t, p] of hs) {
+        for (const y of Object.keys(p.cells).map(Number)) {
+          const moving = t !== c.team && y >= c.start && p.cells[y].k !== 'D';   // 옵트아웃 잔여 계약금은 원소속 구단에 그대로
+          const inOrig = c.type === 'edit' && y >= (c.origStart ?? 9999) && y <= (c.origEnd ?? 0);
+          if (moving || ys.includes(y) || (t === c.team && inOrig)) delete p.cells[y];
+        }
+      }
+      let target = hs.find(([t]) => t === c.team)?.[1];
+      if (!target) {
+        const src = hs[0]?.[1] || goneOf(c.pid)[0]?.[1] || {};
+        const sameTeamTen = goneOf(c.pid).find(([t]) => t === c.team)?.[1]?.ten || 0;
+        target = { pid: c.pid, name: c.name || src.name || '', pos: c.pos || src.pos || '', age: src.age ?? null, ex: false, y2026: null,
+                   prev: null, cells: {}, ten: sameTeamTen, ct: [], custom: null };
+        T[c.team].players.push(target);
+      }
+      Object.assign(target.cells, cells);
+      target.custom = c.id;
+      for (const [t, g] of goneOf(c.pid)) { if (t === c.team) g.hide = true; else g.status = `${c.team} 이적 (커스텀)`; }
+    }
+    for (const t of TEAMS) { T[t].years = {}; for (const y of YEARS) T[t].years[y] = teamYear(T[t], y); }
+    return { teams: T, picks, warns };
+  }
+
+  function teamYear(X, y) {
+    const ent = X.players.filter(p => p.cells[y]).map(p => ({ p, c: p.cells[y] }));
+    // 예외선수(제185조): 그해 그 구단 7시즌 이상 소속 중 산정액 최대 1명, 상한 계산에서만 50%
+    let ex = null;
+    for (const e of ent) {
+      if (e.c.k === 'D' || (e.p.ten || 0) + (y - 2026) < 7) continue;
+      if (!ex || e.c.v > ex.c.v) ex = e;
+    }
+    for (const e of ent) e.c.ex = e === ex;
+    const f = (e) => (e.c.ex ? 0.5 : 1);
+    const lo = (e) => ('GS'.includes(e.c.k) ? (e.c.lo ?? e.c.v) : e.c.v);
+    const top = ent.slice().sort((a, b) => f(b) * b.c.v - f(a) * a.c.v).slice(0, 40);
+    // 옵션 실행률 기본값: 상한에 걸리지 않으면 100%, 걸리면 딱 상한까지만
+    const cap = capOf(y);
+    const base = top.reduce((s, e) => s + f(e) * lo(e), 0);
+    const opts = top.reduce((s, e) => s + f(e) * (e.c.v - lo(e)), 0);
+    const rate = (base + opts <= cap || opts <= 0) ? 1 : Math.max(0, Math.min(1, (cap - base) / opts));
+    const parts = { G: 0, O: 0, P: 0, S: 0, D: 0 };
+    for (const e of top) { e.c.eff = lo(e) + rate * (e.c.v - lo(e)); parts[e.c.k] += f(e) * e.c.eff; }
+    for (const e of ent) if (e.c.eff == null) e.c.eff = lo(e) + rate * (e.c.v - lo(e));
+    const floorBasis = ent.map(e => e.c.lo ?? e.c.v).sort((a, b) => b - a).slice(0, 40).reduce((s, v) => s + v, 0);
+    return {
+      top40: parts.G + parts.O + parts.P + parts.S + parts.D, ex: ex ? ex.p.name : '', rate,
+      guar: parts.G + parts.S + parts.D, dead: parts.D, opt: parts.O, pred: parts.P, count: ent.length,
+      contracted: ent.filter(e => 'GOS'.includes(e.c.k)).length, floor_basis: floorBasis,
+      topSet: new Set(top.map(e => e.p)), rankOf: new Map(ent.slice().sort((a, b) => f(b) * b.c.v - f(a) * a.c.v).map((e, i) => [e.p, i + 1])),
+    };
+  }
+
+  // ---------------- 화면 상태 ----------------
+  let year = 2027;
+  let currentTeam = null;
+  let sortKey = 'cur', sortAsc = false;
+  let tab = 'team';
+  const topOf = (t, y) => y === 2026 ? M.teams[t].y2026 : M.teams[t].years[y].top40;
+  const order = () => TEAMS.slice().sort((a, b) => topOf(b, year) - topOf(a, year));
+
+  const seasonSel = document.getElementById('season-select');
+  seasonSel.innerHTML = YEARS.map(y => `<option value="${y}">${y}${y === 2027 ? ' (예상)' : ' (계약분)'}</option>`).join('');
+  const teamSel = document.getElementById('team-select');
 
   function renderLeagueStrip() {
-    document.getElementById('league-strip').innerHTML = teamOrder.map(t => {
-      const s = allTeams[t].modes[pieMode].summary;
-      return `
-        <button class="league-chip ${t === currentTeam ? 'active' : ''}" data-team="${t}" type="button">
-          <span class="lc-rank">${s.league_rank}위</span>
-          <span class="lc-team">${t}</span>
-          <span class="lc-val">${fmtEok(s.top40_sum_manwon)}억</span>
-        </button>`;
+    document.getElementById('league-strip').innerHTML = order().map((t, i) => `
+      <button class="league-chip ${t === currentTeam ? 'active' : ''}" data-team="${esc(t)}" type="button">
+        <span class="lc-rank">${i + 1}위</span>
+        <span class="lc-team">${esc(t)}</span>
+        <span class="lc-val">${fmtEok(topOf(t, year))}억</span>
+      </button>`).join('');
+    document.querySelectorAll('.league-chip').forEach(el => el.addEventListener('click', () => { currentTeam = el.dataset.team; teamSel.value = currentTeam; renderTeam(); }));
+  }
+
+  function renderTiles() {
+    const T = M.teams[currentTeam], Y = T.years[year];
+    const cap = capOf(year), room = cap - Y.top40, rank = order().indexOf(currentTeam) + 1;
+    const pct = (m) => (m / cap * 100).toFixed(1) + '%';
+    const rateTxt = Y.rate < 1 ? ` · 옵션 실행률 ${Math.round(Y.rate * 100)}%로 상한에 맞춤` : '';
+    const tiles = [
+      { label: `상위 40인 합계 (${year === 2027 ? '예상' : '계약분'})`, value: fmtEok(Y.top40), unit: `억원 (${pct(Y.top40)})`,
+        foot: (year === 2027 ? `확정 ${fmtEok(Y.guar + Y.opt)} + 재계약 예측 ${fmtEok(Y.pred)}억` : `계약된 선수 ${Y.contracted}명 · 재계약·FA 미반영`) + rateTxt, navy: true },
+      { label: `${year}년 상한액 대비${capKnown(year) ? '' : ' (가정)'}`, value: (room >= 0 ? '−' : '+') + fmtEok(Math.abs(room)), unit: `억원`,
+        foot: capKnown(year) ? `상한 ${fmtEok(cap)}억 · ${room >= 0 ? '상한액 이내 (여유)' : '상한액 초과'}` : `상한 미정 · 연 5% 인상 가정 ${fmtEok(cap)}억`,
+        footClass: room < 100000 ? 'critical' : 'good' },
+      { label: '리그 내 순위', value: rank, unit: `/ ${TEAMS.length}구단`, foot: `${year} 상위 40인 합계 기준` },
+      year === 2027
+        ? (() => { const s = D.floor - Y.floor_basis; return { label: '하한액 대비 (2027~)', value: (s > 0 ? '−' : '+') + fmtEok(Math.abs(s)), unit: '억원',
+            foot: s > 0 ? `하한 ${fmtEok(D.floor)}억에 미달` : `하한 ${fmtEok(D.floor)}억 충족 (감면·옵션 제외 기준)`, footClass: s > 0 ? 'critical' : 'good', navy: true }; })()
+        : { label: '2026 대비', value: fmtEok(Y.top40 - T.y2026), unit: '억원', foot: `2026 실제 ${fmtEok(T.y2026)}억 → ${year} 계약분`, navy: true },
+    ];
+    document.getElementById('tiles').innerHTML = tiles.map(t => `
+      <div class="tile ${t.navy ? 'navy' : ''}">
+        <p class="tile-label">${esc(t.label)}</p>
+        <p class="tile-value">${esc(t.value)}<small>${esc(t.unit)}</small></p>
+        <p class="tile-foot ${t.footClass || ''}">${esc(t.foot)}</p>
+      </div>`).join('');
+  }
+
+  function renderYears() {
+    const T = M.teams[currentTeam];
+    const max = Math.max(...ALL_YEARS.map(capOf), ...YEARS.map(y => T.years[y].top40)) * 1.08;
+    const w = (v) => (Math.max(0, v) / max * 100).toFixed(2) + '%';
+    document.getElementById('year-rows').innerHTML = ALL_YEARS.map(y => {
+      const cap = capOf(y);
+      let bars, total, sub, cls = '';
+      if (y === 2026) { total = T.y2026; bars = `<span class="k-G" style="width:${w(total)};opacity:.55"></span>`; sub = `실제 · 여유 ${fmtEok(cap - total)}`; }
+      else {
+        const Y = T.years[y]; total = Y.top40;
+        bars = `<span class="k-G" style="width:${w(Y.guar)}"></span><span class="k-O" style="width:${w(Y.opt)}"></span><span class="k-P" style="width:${w(Y.pred)}"></span>`;
+        const room = cap - total;
+        if (y === 2027) { const s = D.floor - Y.floor_basis; sub = s > 0 ? `하한 ${fmtEok(s)} 미달` : (room < 0 ? `상한 ${fmtEok(-room)} 초과` : `여유 ${fmtEok(room)}`); cls = s > 0 || room < 100000 ? 'critical' : 'good'; }
+        else sub = capKnown(y) ? (room < 0 ? `상한 ${fmtEok(-room)} 초과` : `여유 ${fmtEok(room)}`) : `가정 상한의 ${Math.round(total / cap * 100)}%`;
+        if (Y.rate < 1) sub += ` · 옵션 ${Math.round(Y.rate * 100)}%`;
+      }
+      const floor = y >= 2027 ? `<i class="floor" style="left:${w(D.floor)}" title="하한"></i>` : '';
+      return `<div class="yr-row ${y === year ? 'active' : ''}" data-year="${y}" role="button" tabindex="0">
+        <div class="yr-y">${y}<small>${y === 2026 ? '실제' : y === 2027 ? '예상' : '계약분'}</small></div>
+        <div class="yr-track">${bars}<i class="cap ${capKnown(y) ? '' : 'assumed'}" style="left:${w(cap)}" title="상한 ${fmtEok(cap)}억"></i>${floor}</div>
+        <div class="yr-val">${fmtEok(total)}억<small class="${cls}">${esc(sub)}</small></div></div>`;
     }).join('');
-    document.querySelectorAll('.league-chip').forEach(el => {
-      el.addEventListener('click', () => { currentTeam = el.dataset.team; select.value = currentTeam; renderTeam(); });
+    document.querySelectorAll('.yr-row').forEach(el => {
+      const go = () => { const y = +el.dataset.year; if (y === 2026) return; year = y; seasonSel.value = y; sortKey = 'cur'; sortAsc = false; renderTeam(); };
+      el.addEventListener('click', go);
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     });
   }
 
-  function renderTeam() {
-    const data = allTeams[currentTeam].modes[pieMode];
-    const meta = teamMeta[currentTeam];
-    const { summary, players } = data;
+  function cellTip(c, rate) {
+    const r = rate < 1 && c.v > (c.lo ?? c.v) ? ` · 옵션 실행률 ${Math.round(rate * 100)}% 적용 (옵션 전액이면 ${fmtManwon(c.v)})` : '';
+    if (c.tr) return `${c.trFrom}에서 트레이드 영입 · 공시 전이라 이적 전 산정액 그대로 (${KIND[c.k]})${c.k === 'G' ? ' · 남은 계약금 몫은 받은 구단이 부담' : ''}${r}`;
+    if (c.m === '커스텀') return `커스텀 계약 · ${KIND[c.k]} · 옵션 0 기준 ${fmtManwon(c.lo ?? c.v)}${r}`;
+    if (c.m === '구방식') return `${KIND[c.k]} · 2026년 이전 체결: 연봉 ${fmtManwon(c.sal)}${c.est ? '(추정: 남은 보장연봉 균등분배)' : ''} + 계약금/보장연수 ${fmtManwon(c.bon)} + 옵션 균등분배 ${fmtManwon(c.opt)}${r}`;
+    if (c.m === '신규(AAV)') return `${KIND[c.k]} · 2026년 이후 체결: (총액−옵션)/연수 ${fmtManwon(c.v - c.opt)} + 옵션 균등분배 ${fmtManwon(c.opt)}${r}`;
+    if (c.k === 'D') return '옵트아웃 · 선수는 떠났지만 남은 보장 연도의 계약금 몫(계약금 ÷ 보장연수)은 원소속 구단이 부담';
+    if (c.asm) return '재계약 · 모델 입력 데이터 없음 · ' + c.asm;
+    return KIND[c.k];
+  }
 
+  const cellVal = (p, y) => { if (y === 2026) return p.y2026 ?? -1; const c = p.cells[y]; return c ? (c.eff ?? c.v) : -1; };
+
+  function renderTable() {
+    const T = M.teams[currentTeam], Y = T.years[year];
+    const rankOf = Y.rankOf;
+    const head = [['rank', '순위', 'num'], ['name', '선수명', ''], ['pos', '포지션', ''], ['age', '나이', 'num'], ['type', '구분', ''],
+      ...ALL_YEARS.map(y => [String(y), y === 2026 ? '2026 실제' : (y === 2027 ? '2027 예상' : String(y)), 'num'])];
+    const effKey = sortKey === 'cur' ? String(year) : sortKey;
+    document.getElementById('thead-row').innerHTML = head.map(([k, label, cls]) =>
+      `<th data-key="${k}" class="${cls} ${k === effKey ? 'sorted' : ''}">${label}<span class="arrow">${k === effKey ? (sortAsc ? '▲' : '▼') : '▼'}</span></th>`).join('');
+    const keyVal = (p) => {
+      if (effKey === 'rank') return rankOf.get(p) ?? 999;
+      if (effKey === 'name' || effKey === 'pos') return p[effKey] || '';
+      if (effKey === 'age') return p.age ?? 0;
+      if (effKey === 'type') return (p.cells[year]?.k) || 'Z';
+      return cellVal(p, +effKey);
+    };
+    const rows = T.players.slice().sort((a, b) => {
+      const va = keyVal(a), vb = keyVal(b);
+      if (va < vb) return sortAsc ? -1 : 1; if (va > vb) return sortAsc ? 1 : -1; return cellVal(b, year) - cellVal(a, year);
+    });
+    document.getElementById('roster-body').innerHTML = rows.map(p => {
+      const r = rankOf.get(p), top = r && r <= 40;
+      const kinds = [...new Set(Object.values(p.cells).map(c => c.k))];
+      const end = Math.max(0, ...Object.values(p.cells).map(c => c.end || 0));
+      const exYears = YEARS.filter(y => p.cells[y]?.ex);
+      const badges = [
+        p.tradeOut ? `<span class="badge moved" title="커스텀 트레이드로 이적">→ ${esc(p.tradeOut)} 트레이드</span>` : '',
+        p.tradeIn ? `<span class="badge moved" title="커스텀 트레이드로 영입">${esc(p.tradeIn)}에서 트레이드</span>` : '',
+        p.custom && !p.tradeIn && !p.tradeOut ? `<span class="badge pred" title="커스텀 계약이 반영된 선수">커스텀</span>` : '',
+        kinds.includes('G') ? `<span class="badge moved" title="다년계약 산정액">다년계약${end ? ' ~' + end : ''}</span>` : '',
+        kinds.includes('S') ? `<span class="badge gen">단년계약</span>` : '',
+        kinds.includes('D') ? `<span class="badge moved" title="옵트아웃: 남은 보장 연도의 계약금 몫만 원소속 구단에 남음">옵트아웃</span>` : '',
+        kinds.includes('O') ? `<span class="badge opt" title="옵션 연장 구간: 조건 충족·행사 시">옵션연장</span>` : '',
+        kinds.includes('P') ? `<span class="badge pred" title="재계약 예측 (2026 ${p.prev ? fmtManwon(p.prev) + '만원' : ''})">재계약 예측</span>` : '',
+        (year === 2026 ? p.ex : p.cells[year]?.ex) ? `<span class="badge ex" title="${year} 예외선수: 상한 계산 시 50%">예외 50%</span>`
+          : (exYears.length ? `<span class="badge ex" title="예외선수 지정 연도">예외 ${exYears.map(y => String(y).slice(2)).join('·')}</span>` : ''),
+      ].join(' ');
+      const cells = ALL_YEARS.map(y => {
+        const sel = y === year ? ' sel' : '';
+        if (y === 2026) return `<td class="yc${sel}">${p.y2026 != null ? fmtManwon(p.y2026) : '<span class="c-none">—</span>'}</td>`;
+        const c = p.cells[y];
+        return `<td class="yc${sel}">${c ? `<span class="c-${c.k}${c.est ? ' est' : ''}${c.cu || c.tr ? ' cu' : ''}" title="${esc(cellTip(c, T.years[y].rate))}">${fmtManwon(c.eff ?? c.v)}</span>` : '<span class="c-none">—</span>'}</td>`;
+      }).join('');
+      return `<tr class="${p.cells[year] ? '' : 'outside40'}">
+        <td class="rank ${top ? 'cap-target' : ''}">${r ?? '—'}</td>
+        <td class="name">${esc(p.name)}<button type="button" class="btn sm row-act" data-pid="${esc(p.pid)}" data-team="${esc(currentTeam)}" title="이 선수 계약 만들기·수정·삭제">✎</button></td>
+        <td>${esc(p.pos)}</td><td class="mono num">${p.age ?? '—'}</td>
+        <td>${badges}</td>${cells}</tr>`;
+    }).join('');
+    document.getElementById('table-note').textContent = `${T.players.length}명 · 단위 만원 · ${year} 기준 순위 (예외선수 50% 감면 반영) · ✎로 계약 만들기·수정`;
+    document.getElementById('table-foot').textContent = (year === 2027
+      ? `순위가 색으로 강조된 40명이 ${year} 경쟁균형세 산정 대상입니다. 파란 기울임 숫자는 모델 예측 연봉, 주황 숫자는 조건부 옵션 연장 구간, 점선 밑줄은 그 시즌 연봉을 추정한 구방식 계약, 밑줄 색은 커스텀 계약입니다.`
+      : `${year}년에 계약이 남아 있는 선수는 ${Y.contracted}명입니다. 나머지 자리는 재계약·FA 영입으로 채워지므로 실제 합계는 더 커집니다.`)
+      + (Y.rate < 1 ? ` 옵션 전액을 주면 상한을 넘어, 옵션 실행률을 ${Math.round(Y.rate * 100)}%로 낮춰 상한에 맞췄습니다.` : ' 옵션은 상한에 걸리지 않아 100% 실행으로 계산했습니다.');
+    document.querySelectorAll('#thead-row th').forEach(th => th.addEventListener('click', () => {
+      const k = th.dataset.key;
+      if (k === effKey) sortAsc = !sortAsc; else { sortKey = k; sortAsc = ['rank', 'name', 'pos', 'type'].includes(k); }
+      renderTable();
+    }));
+    document.querySelectorAll('#roster-body .row-act').forEach(b => b.addEventListener('click', () => openForm({ pid: b.dataset.pid, team: b.dataset.team })));
+    syncStickyColWidth();
+  }
+
+  function renderGone() {
+    const G = M.teams[currentTeam].gone.filter(g => !g.hide);
+    document.getElementById('gone-body').innerHTML = G.length ? G.map(g => `<tr>
+      <td class="name">${esc(g.name)}${g.ex ? ' <span class="badge ex">예외</span>' : ''}<button type="button" class="btn sm row-act" data-pid="${esc(g.pid)}" title="이 선수의 새 계약 만들기">+ 계약</button></td><td>${esc(g.pos)}</td>
+      <td class="mono num">${g.age ?? '—'}</td><td class="mono num">${fmtManwon(g.y2026)}</td>
+      <td><span class="badge ${g.status === 'FA' ? 'gen' : 'moved'}">${esc(g.status === 'FA' ? 'FA 자격 (잔류 미정)' : g.status)}</span></td></tr>`).join('')
+      : '<tr><td colspan="5" style="color:var(--muted)">해당 선수 없음</td></tr>';
+    document.querySelectorAll('#gone-body .row-act').forEach(b => b.addEventListener('click', () => openForm({ pid: b.dataset.pid, type: 'new' })));
+  }
+
+  function renderTeam() {
+    const meta = teamMeta[currentTeam], T = M.teams[currentTeam];
     document.getElementById('hero').style.setProperty('--header-navy', meta.base);
     document.getElementById('hero').style.setProperty('--header-navy-2', meta.base2);
     document.documentElement.style.setProperty('--accent', meta.accent);
     document.getElementById('team-title').textContent = meta.full;
-
-    const overUnder = summary.over_under_manwon;
-    const overUnderIsGood = overUnder <= 0;
-    const modeLabel = pieMode === 'real' ? '실지급' : '샐러리캡(조정연봉)';
-    const fmtPct = (manwon) => (manwon / summary.cap_limit_manwon * 100).toFixed(1) + '%';
-
-    const tiles = [
-      {
-        label: `상위 40인 합계 (${modeLabel})`,
-        value: fmtEok(summary.top40_sum_manwon),
-        unit: `억원 (${fmtPct(summary.top40_sum_manwon)})`,
-        foot: `연봉 상위 40명 기준 · ${summary.headcount}명 중`,
-        navy: true,
-      },
-      {
-        label: `${summary.year}년 상한액 대비`,
-        value: (overUnderIsGood ? '−' : '+') + fmtEok(Math.abs(overUnder)),
-        unit: `억원 (${fmtPct(Math.abs(overUnder))})`,
-        foot: overUnderIsGood ? '상한액 이내 (여유)' : '상한액 초과',
-        footClass: overUnderIsGood ? 'good' : 'critical',
-      },
-      {
-        label: '리그 내 순위',
-        value: summary.league_rank,
-        unit: `/ ${summary.league_size}구단`,
-        foot: `${modeLabel} 상위 40인 합계 기준`,
-      },
-      {
-        label: '전체 보류선수 연봉 총합',
-        value: fmtEok(summary.total_sum_manwon),
-        unit: '억원',
-        foot: `1군 등록분 ${fmtEok(summary.active_sum_manwon)}억원 포함`,
-        navy: true,
-      },
-    ];
-
-    document.getElementById('tiles').innerHTML = tiles.map(t => `
-      <div class="tile ${t.navy ? 'navy' : ''}">
-        <p class="tile-label">${t.label}</p>
-        <p class="tile-value">${t.value}<small>${t.unit}</small></p>
-        <p class="tile-foot ${t.footClass || ''}">${t.foot}</p>
-      </div>
-    `).join('');
-
-    document.getElementById('table-note').textContent =
-      `${summary.headcount}명 · ${modeLabel} 기준 · 방출/이적/외국인선수 제외(이동 사유가 확인된 이탈 선수는 잔여연봉으로 포함) · 연봉 내림차순`;
-
-    renderTable(players);
-    renderLeagueStrip();
-    renderPies();
+    document.getElementById('eyebrow-year').textContent = `${year} 시즌`;
+    const Y27 = T.years[2027];
+    document.getElementById('team-sub').textContent =
+      `2027년 상위 40인 예상 ${fmtEok(Y27.top40)}억원(상한 ${fmtEok(capOf(2027))}억). 이 중 다년·단년 확정 ${fmtEok(Y27.guar)}억, 옵션 연장 ${fmtEok(Y27.opt)}억, 재계약 예측 ${fmtEok(Y27.pred)}억입니다. ` +
+      `이미 계약으로 묶인 금액은 ${YEARS.slice(1).map(y => `${y}년 ${fmtEok(T.years[y].top40)}억`).join(', ')}입니다. 예외선수(상한 계산 50%): 2026 ${T.ex}, ${year} ${T.years[year].ex || '없음'}.`;
+    renderLeagueStrip(); renderTiles(); renderYears(); renderTable(); renderGone();
   }
 
-  function polarPoint(cx, cy, r, angleDeg) {
-    const rad = (angleDeg - 90) * Math.PI / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-  }
-
-  function drawPie(svgId, legendId, buckets, subEl) {
-    const svg = document.getElementById(svgId);
-    const total = buckets.reduce((s, b) => s + (pieBasis === 'spend' ? b.spend_eok : b.count), 0);
-    const cx = 50, cy = 50, r = 48;
-    let angle = 0;
-    let paths = '';
-
-    buckets.forEach((b, i) => {
-      const value = pieBasis === 'spend' ? b.spend_eok : b.count;
-      const frac = total > 0 ? value / total : 0;
-      const sweep = frac * 360;
-      const color = `var(${CAT_SLOTS[i % CAT_SLOTS.length]})`;
-      if (frac >= 0.9999) {
-        paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"><title>${b.label}: ${b.count}명 · ${b.pct}%</title></circle>`;
-      } else if (sweep > 0.05) {
-        const start = polarPoint(cx, cy, r, angle);
-        const end = polarPoint(cx, cy, r, angle + sweep);
-        const largeArc = sweep > 180 ? 1 : 0;
-        paths += `<path d="M${cx},${cy} L${start.x.toFixed(2)},${start.y.toFixed(2)} A${r},${r} 0 ${largeArc} 1 ${end.x.toFixed(2)},${end.y.toFixed(2)} Z" fill="${color}"><title>${b.label}: ${b.count}명 · ${b.pct}%</title></path>`;
-      }
-      angle += sweep;
-    });
-    svg.innerHTML = paths;
-
-    document.getElementById(legendId).innerHTML = buckets.map((b, i) => `
-      <div class="pie-legend-row">
-        <span class="swatch" style="background:var(${CAT_SLOTS[i % CAT_SLOTS.length]})"></span>
-        <span class="lg-label">${b.label}</span>
-        <span class="lg-val">
-          <span class="${pieBasis === 'count' ? 'lg-emph' : ''}">${b.count}명</span>
-          &middot;
-          <span class="${pieBasis === 'spend' ? 'lg-emph' : ''}">${b.pct}%</span>
-        </span>
-      </div>
-    `).join('');
-
-    if (subEl) subEl.textContent = `${pieMode === 'real' ? '실지급 연봉' : '샐러리캡 산정액'} 기준 · ${pieBasis === 'spend' ? '총지출 비중' : '인원수'}으로 파이 비율 표시`;
-  }
-
-  function renderPies() {
-    const teamPie = pieData[currentTeam].modes[pieMode];
-    let rankBuckets = teamPie.rank_pie;
-    if (pieMode === 'cap') {
-      // 샐러리캡 산정 대상은 top40뿐이라 '순위 구간' 파이에서는 그 밖(TOP40 외)을
-      // 아예 빼고, 남은 구간끼리 비중(pct)을 다시 100%로 정규화한다.
-      rankBuckets = rankBuckets.filter(b => b.label !== 'TOP40 외');
-      const total = rankBuckets.reduce((s, b) => s + b.spend_eok, 0);
-      rankBuckets = rankBuckets.map(b => ({
-        ...b,
-        pct: total > 0 ? Math.round((b.spend_eok / total) * 10000) / 100 : 0,
-      }));
+  // ---------------- 커스텀 계약 탭 ----------------
+  // 지금 반영된 상태(커스텀 계약·트레이드 포함) 기준. 같은 선수가 여러 구단에 남아 있으면 앞으로의 산정액이 있는 쪽이 현 소속
+  const allPlayers = () => {
+    const out = new Map();
+    const fut = (p) => Object.keys(p.cells).filter(y => +y >= YEARS[0]).length;
+    for (const t of TEAMS) for (const p of M.teams[t].players) {
+      const cur = out.get(p.pid), f = fut(p);
+      if (!cur || f > cur.f) out.set(p.pid, { pid: p.pid, name: p.name, pos: p.pos, team: t, ct: p.ct || [], age: p.age, no: p.no, by: p.by, kind: '명단', f });
     }
-    drawPie('rank-pie-svg', 'rank-pie-legend', rankBuckets, document.getElementById('rank-pie-sub'));
-    drawPie('abs-pie-svg', 'abs-pie-legend', teamPie.abs_pie, document.getElementById('abs-pie-sub'));
+    for (const t of TEAMS) for (const g of M.teams[t].gone) if (!out.has(g.pid)) out.set(g.pid, { pid: g.pid, name: g.name, pos: g.pos, team: t, ct: [], age: g.age, no: g.no, by: g.by, kind: g.status === 'FA' ? 'FA' : g.status });
+    for (const c of store.items) if (!out.has(c.pid)) out.set(c.pid, { pid: c.pid, name: c.name, pos: c.pos || '', team: c.team, ct: [], kind: '커스텀' });
+    return out;
+  };
+  const inactive = (p) => /방출|은퇴|이탈|임의|웨이버/.test(p.kind || '');
+  // 동명이인이면 구단 · 포지션 · 등번호 · 생년 순으로 보여 준다
+  let dupNames = new Set();
+  const playerLabel = (p) => {
+    const parts = [p.name, p.team, p.pos || '-'];
+    if (dupNames.has(p.name)) parts.push(p.no ? `${p.no}번` : '등번호 없음', p.by ? `${p.by}년생` : '생년 미상');
+    if (p.kind && p.kind !== '명단') parts.push(p.kind);
+    return `${parts.join(' · ')} (#${p.pid})`;
+  };
+
+  function renderCustomTab() {
+    const items = [...store.items].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    document.getElementById('cc-count').textContent = items.length;
+    const TYPE = { new: '생성', edit: '수정', delete: '삭제', trade: '트레이드' };
+    document.getElementById('cc-body').innerHTML = items.length ? items.map(c => {
+      if (c.type === 'trade') return tradeRow(c);
+      const cells = c.type === 'delete' ? {} : customCells(c);
+      const per = Object.entries(cells).map(([y, v]) => `${String(y).slice(2)}: ${fmtEok2(v.v)}`).join(' · ');
+      const n = c.years || 0, oy = c.optYears || 0;
+      const total = c.type === 'delete' ? '' : (Array.isArray(c.perYear) && c.perYear.length ? c.perYear.reduce((s, v) => s + num(v), 0) : num(c.bonus) + num(c.salary) + num(c.option) + num(c.optAmount));
+      const period = c.type === 'delete' ? `${c.origStart}~${c.origEnd}` : `${c.start}~${c.start + n - 1}${oy ? ` (+${oy}년 옵션)` : ''}`;
+      const comp = c.type === 'delete' ? '계약 삭제' : `계약금 ${num(c.bonus)} · 연봉 ${num(c.salary)} · 옵션 ${num(c.option)}${oy ? ` · 연장옵션 ${num(c.optAmount)}` : ''}`;
+      return `<tr>
+        <td><span class="cc-type ${esc(c.type)}">${TYPE[c.type] || ''}</span></td>
+        <td class="name">${esc(c.name)}</td>
+        <td>${esc(c.fromTeam && c.fromTeam !== c.team ? `${c.fromTeam} → ${c.team}` : c.team)}</td>
+        <td class="mono">${esc(period)}</td>
+        <td class="mono num">${total === '' ? '—' : esc(total.toLocaleString('ko-KR', { maximumFractionDigits: 2 })) + '억'}</td>
+        <td>${esc(comp)}</td>
+        <td class="mono" style="font-size:12px">${esc(per || '—')}</td>
+        <td>${esc(c.note || '')}</td>
+        <td style="white-space:nowrap"><button type="button" class="btn sm" data-edit="${esc(c.id)}">수정</button> <button type="button" class="btn sm danger" data-del="${esc(c.id)}">${c.type === 'new' ? '삭제' : '되돌리기'}</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="9" class="cc-empty">아직 만든 커스텀 계약이 없습니다. "새 계약 만들기", "트레이드"나 선수 이름 옆 ✎로 시작하세요.</td></tr>';
+    if (M.warns.length) document.getElementById('cc-body').insertAdjacentHTML('afterbegin', `<tr><td colspan="9" class="ferr">${M.warns.map(esc).join('<br>')}</td></tr>`);
+    document.querySelectorAll('#cc-body [data-edit]').forEach(b => b.addEventListener('click', () => {
+      const c = store.items.find(x => x.id === b.dataset.edit);
+      if (c?.type === 'trade') openTrade({ editId: c.id }); else openForm({ editId: b.dataset.edit });
+    }));
+    document.querySelectorAll('#cc-body [data-del]').forEach(b => b.addEventListener('click', async () => {
+      const id = b.dataset.del;
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = '한 번 더 누르면 실행'; setTimeout(() => { if (b.isConnected) { b.dataset.armed = ''; renderCustomTab(); } }, 3000); return; }
+      await store.remove(id); refresh();
+    }));
   }
 
-  document.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const group = btn.dataset.toggle;
-      document.querySelectorAll(`.toggle-btn[data-toggle="${group}"]`).forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (group === 'mode') { pieMode = btn.dataset.value; sortKey = 'rank'; sortAsc = true; renderTeam(); }
-      if (group === 'basis') { pieBasis = btn.dataset.value; renderPies(); }
-    });
+  const NAMES = new Map();
+  for (const t of TEAMS) { for (const p of D.teams[t].players) NAMES.set(p.pid, p); for (const g of D.teams[t].gone) if (!NAMES.has(g.pid)) NAMES.set(g.pid, g); }
+  const nameOf = (pid) => NAMES.get(pid)?.name || store.items.find(x => x.pid === pid)?.name || pid;
+  function sideText(s, holder) {
+    const parts = [];
+    if (s?.players?.length) parts.push(s.players.map(nameOf).join(', '));
+    if (num(s?.cash) > 0) parts.push(`현금 ${num(s.cash)}억`);
+    for (const pk of s?.picks || []) parts.push(pickText(pk, holder));
+    return parts.join(' · ') || '없음';
+  }
+  function tradeRow(c) {
+    const moved = (to) => M.teams[to].players.filter(p => p.cells[c.season]?.tr === c.id).reduce((s, p) => s + p.cells[c.season].v, 0);
+    const a2b = moved(c.teamB), b2a = moved(c.teamA);
+    const names = [...(c.sideA?.players || []), ...(c.sideB?.players || [])].map(nameOf).join(', ');
+    return `<tr>
+      <td><span class="cc-type trade">트레이드</span></td>
+      <td>${esc(names || '선수 없음')}</td>
+      <td>${esc(c.teamA)} ↔ ${esc(c.teamB)}</td>
+      <td class="mono">${c.season} 시즌 전</td>
+      <td class="mono num">—</td>
+      <td style="font-size:12.5px">${esc(c.teamA)} → ${esc(c.teamB)}: ${esc(sideText(c.sideA, c.teamA))}<br>${esc(c.teamB)} → ${esc(c.teamA)}: ${esc(sideText(c.sideB, c.teamB))}</td>
+      <td class="mono" style="font-size:12px">${String(c.season).slice(2)}: ${esc(c.teamA)}→${esc(c.teamB)} ${fmtEok2(a2b)} · ${esc(c.teamB)}→${esc(c.teamA)} ${fmtEok2(b2a)}</td>
+      <td>${esc(c.note || '')}</td>
+      <td style="white-space:nowrap"><button type="button" class="btn sm" data-edit="${esc(c.id)}">수정</button> <button type="button" class="btn sm danger" data-del="${esc(c.id)}">삭제</button></td>
+    </tr>`;
+  }
+
+  function setTab(t) {
+    tab = t;
+    document.getElementById('tab-team').hidden = t !== 'team';
+    document.getElementById('tab-custom').hidden = t !== 'custom';
+    document.getElementById('tab-btn-team').setAttribute('aria-selected', t === 'team');
+    document.getElementById('tab-btn-custom').setAttribute('aria-selected', t === 'custom');
+    try { history.replaceState(null, '', t === 'custom' ? '#custom' : location.pathname + location.search); } catch (e) { /* 무시 */ }
+  }
+
+  // ---------------- 계약 입력 폼 ----------------
+  const $ = (id) => document.getElementById(id);
+  let form = null;   // {editId, pid, orig}
+  $('f-team').innerHTML = TEAMS.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  $('f-start').innerHTML = YEARS.map(y => `<option value="${y}">${y}</option>`).join('');
+
+  function fillPlayers() {
+    const all = [...allPlayers().values()], seen = new Set();
+    dupNames = new Set();
+    for (const p of all) { if (seen.has(p.name)) dupNames.add(p.name); seen.add(p.name); }
+    $('f-players').innerHTML = all.slice().sort((a, b) => (inactive(a) - inactive(b)) || a.name.localeCompare(b.name, 'ko') || (a.by || 0) - (b.by || 0)).map(p => `<option value="${esc(playerLabel(p))}"></option>`).join('');
+  }
+  function resolvePlayer(text) {
+    const m = String(text).match(/\(#([^)]+)\)\s*$/);
+    const all = allPlayers();
+    if (m && all.has(m[1])) return all.get(m[1]);
+    const byName = [...all.values()].filter(p => p.name === String(text).trim());
+    return byName.length === 1 ? byName[0] : null;
+  }
+  const ftype = () => document.querySelector('input[name="ftype"]:checked').value;
+  function setType(t) { document.querySelector(`input[name="ftype"][value="${t}"]`).checked = true; syncForm(); }
+
+  function contractOptions(p) {
+    // 보장 구간 + 바로 뒤 옵션 구간을 한 계약으로 묶는다
+    const ct = (p?.ct || []).slice().sort((a, b) => a.s - b.s);
+    const out = [];
+    for (const c of ct) {
+      if (c.o && out.length && out[out.length - 1].e + 1 === c.s && !out[out.length - 1].ext) { const g = out[out.length - 1]; g.ext = c; g.e = c.e; continue; }
+      out.push({ ...c, ext: null, gs: c.s, ge: c.e });
+    }
+    return out;
+  }
+  function fillOrig(p) {
+    const opts = contractOptions(p);
+    $('f-orig').innerHTML = opts.length ? opts.map((c, i) => `<option value="${i}">${c.gs}~${c.e} · ${c.o && !c.ext ? '옵션 구간' : '보장 ' + (c.ge - c.gs + 1) + '년'} ${c.tot}억${c.ext ? ` + 옵션연장 ${c.ext.tot}억` : ''}</option>`).join('')
+      : '<option value="">수정할 수 있는 다년계약이 없습니다</option>';
+    return opts;
+  }
+
+  function syncForm() {
+    const t = ftype();
+    const p = resolvePlayer($('f-player').value);
+    $('f-orig-wrap').hidden = t === 'new';
+    $('f-terms').style.display = t === 'delete' ? 'none' : '';
+    $('f-peryear-on').closest('.frow').style.display = t === 'delete' ? 'none' : '';
+    if (t !== 'new') fillOrig(p);
+    $('f-peryear').hidden = !$('f-peryear-on').checked;
+    $('cc-title').textContent = { new: '계약 만들기', edit: '기존 계약 수정', delete: '계약 삭제' }[t];
+    preview();
+  }
+
+  function prefillFromOrig() {
+    const p = resolvePlayer($('f-player').value);
+    const opts = contractOptions(p);
+    const c = opts[+$('f-orig').value];
+    if (!c) return;
+    const n = c.o && !c.ext ? c.n : (c.ge - c.gs + 1);
+    $('f-team').value = c.team || p.team; $('f-start').value = String(Math.max(c.gs, YEARS[0]));
+    $('f-years').value = n; $('f-bonus').value = c.o ? 0 : c.bon; $('f-option').value = c.o ? 0 : c.opt;
+    $('f-salary').value = +(c.tot - (c.o ? 0 : c.bon) - (c.o ? 0 : c.opt)).toFixed(2);
+    $('f-oyears').value = c.ext ? c.ext.n : 0; $('f-oamount').value = c.ext ? c.ext.tot : 0;
+    // 2026년 이전 체결 계약은 연도별 연봉이 달라 지금 표의 값을 그대로 연도별 입력에 채운다
+    const base = M.teams[c.team || p.team]?.players.find(x => x.pid === p.pid);
+    if (base && (c.sg < 2026 || c.gs < YEARS[0])) {
+      const ys = []; for (let y = Math.max(c.gs, YEARS[0]); y <= c.e; y++) if (base.cells[y]) ys.push(fmtEok2(base.cells[y].v).replace(/,/g, ''));
+      $('f-peryear-on').checked = true; $('f-peryear').value = ys.join(', ');
+      if (c.gs < YEARS[0]) $('f-years').value = Math.max(1, (c.ge) - YEARS[0] + 1);
+    } else { $('f-peryear-on').checked = false; $('f-peryear').value = ''; }
+    form.orig = { s: Math.max(c.gs, YEARS[0]), e: c.e };
+    syncForm();
+  }
+
+  function readForm() {
+    const t = ftype();
+    const text = $('f-player').value.trim();
+    const p = resolvePlayer(text);
+    const errs = [];
+    if (!text) errs.push(form.tried ? '선수를 입력하세요.' : '');
+    const it = { id: form.editId || ('cc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), type: t,
+                 createdAt: form.createdAt || Date.now(), updatedAt: Date.now(), note: $('f-note').value.trim().slice(0, 200) };
+    if (p) { it.pid = p.pid; it.name = p.name; it.pos = p.pos || ''; it.fromTeam = p.team; }
+    else { it.pid = form.newPid || ('custom-' + Date.now().toString(36)); it.name = text.replace(/\s*\(#.*$/, '').slice(0, 30); it.pos = ''; it.fromTeam = ''; if (t !== 'new') errs.push('수정·삭제는 명단에 있는 선수만 고를 수 있습니다.'); }
+    if (t !== 'new') {
+      const c = contractOptions(p)[+$('f-orig').value];
+      if (!c) errs.push('대상 계약을 고르세요.');
+      else { it.origStart = Math.max(c.gs, YEARS[0]); it.origEnd = c.e; it.origLabel = `${c.gs}~${c.e} ${c.tot}억`; }
+    }
+    if (t === 'delete') { it.team = it.fromTeam; return { it, errs }; }
+    it.team = $('f-team').value; it.start = +$('f-start').value;
+    it.years = Math.round(num($('f-years').value)); it.bonus = num($('f-bonus').value); it.salary = num($('f-salary').value);
+    it.option = num($('f-option').value); it.optYears = Math.round(num($('f-oyears').value)); it.optAmount = num($('f-oamount').value);
+    if (it.years < 1) errs.push('보장 연수는 1년 이상이어야 합니다.');
+    if ([it.bonus, it.salary, it.option, it.optAmount].some(v => v < 0)) errs.push('금액은 0 이상이어야 합니다.');
+    if (it.optYears > 0 && it.optAmount <= 0) errs.push('옵션 연장 연수를 넣었으면 금액도 넣으세요.');
+    if ($('f-peryear-on').checked) {
+      const arr = $('f-peryear').value.split(/[,\s]+/).filter(Boolean).map(Number);
+      if (!arr.length || arr.some(v => !Number.isFinite(v) || v < 0)) errs.push('연도별 산정액은 0 이상의 숫자를 쉼표로 구분해 넣으세요.');
+      else if (arr.length !== it.years + it.optYears) errs.push(`연도별 산정액은 ${it.years + it.optYears}개(보장 ${it.years} + 옵션연장 ${it.optYears})가 필요합니다.`);
+      else it.perYear = arr;
+    }
+    return { it, errs };
+  }
+
+  function preview() {
+    const { it, errs } = readForm();
+    const el = $('f-preview');
+    if (it.type === 'delete') {
+      el.innerHTML = it.origStart ? `<b>${esc(it.name)}</b>의 ${esc(it.origLabel)} 계약을 표에서 뺍니다 (${it.origStart}~${it.origEnd}).` : '삭제할 계약을 고르세요.';
+      $('f-err').textContent = errs[0] || ''; return;
+    }
+    const cells = customCells(it);
+    const per = Object.entries(cells).map(([y, c]) => `${y} <b>${fmtEok2(c.v)}</b>억${c.k === 'O' ? '(옵션연장)' : ''}`).join(' · ');
+    const total = it.perYear ? it.perYear.reduce((s, v) => s + v, 0) : it.bonus + it.salary + it.option + it.optAmount;
+    const moving = it.fromTeam && it.fromTeam !== it.team;
+    el.innerHTML = `총액 <b>${total.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}억</b> · 연도별 산정액: ${per || '—'}` +
+      (moving ? `<br>${esc(it.fromTeam)} → ${esc(it.team)} 이적: ${it.start}년부터 ${esc(it.fromTeam)}의 계약·재계약 예측은 빠집니다.` : '');
+    $('f-err').textContent = errs[0] || '';
+  }
+
+  function openForm(opt = {}) {
+    fillPlayers();
+    form = { editId: null, createdAt: null, orig: null, newPid: null };
+    ['f-bonus', 'f-salary', 'f-option', 'f-oamount'].forEach(id => $(id).value = 0);
+    $('f-years').value = 4; $('f-oyears').value = 0; $('f-note').value = ''; $('f-peryear-on').checked = false; $('f-peryear').value = '';
+    $('f-start').value = String(YEARS[0]);
+    if (opt.editId) {
+      const c = store.items.find(x => x.id === opt.editId);
+      if (!c) return;
+      form.editId = c.id; form.createdAt = c.createdAt; form.newPid = c.pid;
+      const p = allPlayers().get(c.pid);
+      $('f-player').value = p ? playerLabel(p) : c.name;
+      setType(c.type);
+      if (c.type !== 'new') {
+        const opts = contractOptions(p); const i = opts.findIndex(o => Math.max(o.gs, YEARS[0]) === c.origStart && o.e === c.origEnd);
+        $('f-orig').value = String(Math.max(0, i));
+      }
+      if (c.type !== 'delete') {
+        $('f-team').value = c.team; $('f-start').value = String(c.start); $('f-years').value = c.years; $('f-bonus').value = c.bonus; $('f-salary').value = c.salary;
+        $('f-option').value = c.option; $('f-oyears').value = c.optYears || 0; $('f-oamount').value = c.optAmount || 0;
+        if (c.perYear) { $('f-peryear-on').checked = true; $('f-peryear').value = c.perYear.join(', '); }
+      }
+      $('f-note').value = c.note || '';
+    } else {
+      const p = opt.pid ? allPlayers().get(opt.pid) : null;
+      $('f-player').value = p ? playerLabel(p) : '';
+      if (p) $('f-team').value = opt.team || p.team;
+      const hasCt = p && contractOptions(p).length;
+      setType(opt.type || (hasCt ? 'edit' : 'new'));
+      if (hasCt && (opt.type || 'edit') === 'edit') prefillFromOrig();
+    }
+    lastPid = resolvePlayer($('f-player').value)?.pid ?? null;
+    syncForm();
+    $('cc-modal').classList.add('open');
+    setTimeout(() => $('f-player').focus(), 30);
+  }
+  function closeForm() { $('cc-modal').classList.remove('open'); }
+
+  document.querySelectorAll('input[name="ftype"]').forEach(r => r.addEventListener('change', () => { syncForm(); if (ftype() === 'edit') prefillFromOrig(); }));
+  let lastPid = null;
+  $('f-player').addEventListener('change', () => {
+    const p = resolvePlayer($('f-player').value);
+    if (p && p.pid === lastPid) { preview(); return; }        // 같은 선수면 고른 구단·조건을 그대로 둔다
+    lastPid = p ? p.pid : null;
+    if (p) $('f-team').value = p.team;
+    syncForm(); if (ftype() === 'edit') prefillFromOrig();
+  });
+  $('f-orig').addEventListener('change', () => { if (ftype() === 'edit') prefillFromOrig(); else preview(); });
+  ['f-team', 'f-start', 'f-years', 'f-bonus', 'f-salary', 'f-option', 'f-oyears', 'f-oamount', 'f-peryear', 'f-note'].forEach(id => $(id).addEventListener('input', preview));
+  $('f-peryear-on').addEventListener('change', syncForm);
+  $('f-cancel').addEventListener('click', closeForm);
+  $('cc-modal').addEventListener('click', (e) => { if (e.target === $('cc-modal')) closeForm(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeForm(); $('io-modal').classList.remove('open'); $('tr-modal').classList.remove('open'); } });
+  $('f-save').addEventListener('click', async () => {
+    form.tried = true;
+    const { it, errs } = readForm();
+    if (errs.length) { $('f-err').textContent = errs[0] || '선수를 입력하세요.'; return; }
+    $('f-save').disabled = true;
+    await store.put(it);
+    $('f-save').disabled = false;
+    closeForm();
+    if (it.team && it.type !== 'delete') currentTeam = it.team, teamSel.value = it.team;
+    refresh();
   });
 
-  function renderTable(players) {
-    const rows = [...players].sort((a, b) => {
-      let va = a[sortKey], vb = b[sortKey];
-      if (typeof va === 'string') { vb = String(vb); }
-      if (va < vb) return sortAsc ? -1 : 1;
-      if (va > vb) return sortAsc ? 1 : -1;
-      return 0;
+  $('cc-new').addEventListener('click', () => openForm({ type: 'new' }));
+  $('cc-copy').addEventListener('click', async () => {
+    const b = $('cc-copy');
+    try { await navigator.clipboard.writeText(JSON.stringify(store.items, null, 1)); b.textContent = '복사했습니다'; }
+    catch (e) { b.textContent = '복사하지 못했습니다'; }
+    setTimeout(() => { b.textContent = 'JSON 복사'; }, 2000);
+  });
+  $('cc-import').addEventListener('click', () => { $('io-text').value = ''; $('io-err').textContent = ''; $('io-modal').classList.add('open'); });
+  $('io-cancel').addEventListener('click', () => $('io-modal').classList.remove('open'));
+  $('io-ok').addEventListener('click', async () => {
+    let arr;
+    try { arr = JSON.parse($('io-text').value); } catch (e) { $('io-err').textContent = 'JSON 형식이 아닙니다.'; return; }
+    if (!Array.isArray(arr)) { $('io-err').textContent = '계약 목록(배열)이어야 합니다.'; return; }
+    const cleanSide = (s) => ({
+      players: (Array.isArray(s?.players) ? s.players : []).slice(0, 5).map(v => String(v).slice(0, 40)),
+      cash: Math.min(100, Math.max(0, num(s?.cash))),
+      picks: (Array.isArray(s?.picks) ? s.picks : []).slice(0, 2).filter(pk => pk && TEAMS.includes(pk.orig) && PICK_YEARS.includes(num(pk.year)))
+        .map(pk => ({ year: num(pk.year), round: Math.min(ROUNDS, Math.max(1, Math.round(num(pk.round)))), orig: pk.orig })),
     });
+    for (const x of arr.filter(x => x && x.type === 'trade' && typeof x.id === 'string' && TEAMS.includes(x.teamA) && TEAMS.includes(x.teamB) && x.teamA !== x.teamB)) {
+      await store.put({ id: x.id.slice(0, 60), type: 'trade', teamA: x.teamA, teamB: x.teamB, season: YEARS.includes(num(x.season)) ? num(x.season) : YEARS[0],
+                        sideA: cleanSide(x.sideA), sideB: cleanSide(x.sideB), note: String(x.note || '').slice(0, 200), createdAt: num(x.createdAt) || Date.now(), updatedAt: Date.now() });
+    }
+    const ok = arr.filter(x => x && typeof x === 'object' && typeof x.id === 'string' && ['new', 'edit', 'delete'].includes(x.type) && typeof x.pid === 'string' && TEAMS.includes(x.team || x.fromTeam));
+    for (const x of ok) {
+      const it = { id: x.id.slice(0, 60), type: x.type, pid: String(x.pid).slice(0, 40), name: String(x.name || '').slice(0, 30), pos: String(x.pos || '').slice(0, 20),
+                   fromTeam: TEAMS.includes(x.fromTeam) ? x.fromTeam : '', team: TEAMS.includes(x.team) ? x.team : x.fromTeam, note: String(x.note || '').slice(0, 200),
+                   createdAt: num(x.createdAt) || Date.now(), updatedAt: Date.now() };
+      for (const k of ['start', 'years', 'bonus', 'salary', 'option', 'optYears', 'optAmount', 'origStart', 'origEnd']) if (x[k] != null) it[k] = num(x[k]);
+      if (Array.isArray(x.perYear)) it.perYear = x.perYear.map(num);
+      if (x.origLabel) it.origLabel = String(x.origLabel).slice(0, 60);
+      await store.put(it);
+    }
+    $('io-modal').classList.remove('open');
+    refresh();
+  });
 
-    document.getElementById('roster-body').innerHTML = rows.map(p => `
-      <tr class="${p.top40 ? '' : 'outside40'}">
-        <td class="rank ${p.top40 ? 'cap-target' : ''}" title="${p.top40 ? '상위 40인 포함 (경쟁균형세 산정 대상)' : ''}">${p.rank}</td>
-        <td class="name">${p.name}${p.level === '2군' ? '<span class="lvl">2군</span>' : ''}</td>
-        <td>${p.pos}</td>
-        <td class="mono num">${p.age ?? '—'}</td>
-        <td class="mono num">${p.years ?? '—'}</td>
-        <td>
-          <span class="badge ${p.type === '최저연봉' ? 'min' : 'gen'}">${p.type}</span>
-          ${p.moved ? `<span class="badge moved" title="이탈 사유">${p.moved}</span>` : ''}
-          ${p.myc ? `<span class="badge moved" title="다년계약 조정연봉 적용">다년계약</span>` : ''}
-        </td>
-        <td class="mono salary num">${fmtManwon(p.salary_manwon)}<span style="color:var(--muted); font-weight:400;"> 만원</span></td>
-        <td class="mono pct num">${p.cap_pct.toFixed(2)}%</td>
-      </tr>
-    `).join('');
+  // ---------------- 트레이드 폼 ----------------
+  // 상태: 구단1(A)·구단2(B)가 각각 "보내는" 선수(0~5), 현금(0~100억), 지명권(최대 2장)
+  let TS = null;
+  const emptySide = (team) => ({ team, players: [], cash: 0, picks: [] });
+  $('t-season').innerHTML = YEARS.map(y => `<option value="${y}">${y} 시즌 전 (오프시즌)</option>`).join('');
 
-    document.getElementById('table-foot').textContent =
-      `순위가 색으로 강조된 40명이 경쟁균형세 산정 대상입니다. 41위 이하는 표에서 옅게 표시됩니다.`;
+  function tradeBase() {
+    // 이 트레이드보다 먼저 만든 커스텀 계약·트레이드까지 반영한 상태에서 선수·지명권 보유를 본다
+    const before = store.items.filter(x => x.id !== TS.editId && (x.createdAt || 0) < TS.createdAt);
+    return buildModel(sortedItems(before));
+  }
+  const sideOther = (k) => (k === 'A' ? 'B' : 'A');
+  function ownedPlayers(k) {
+    const S = TS[k], y0 = TS.season;
+    return TS.base.teams[S.team].players.filter(p => Object.entries(p.cells).some(([y, cl]) => +y >= y0 && cl.k !== 'D'));
+  }
+  const seasonAmt = (p) => { const cl = p.cells[TS.season]; return cl ? (cl.eff ?? cl.v) : 0; };
+  const ownedOrigs = (team, year, round) => TEAMS.filter(o => TS.base.picks.get(pickKey({ year, round, orig: o })) === team)
+    .sort((a, b) => (pickOverall({ year, round, orig: a }) || 99) - (pickOverall({ year, round, orig: b }) || 99));
 
-    document.querySelectorAll('thead th').forEach(th => {
-      th.classList.toggle('sorted', th.dataset.key === sortKey);
-      const arrow = th.querySelector('.arrow');
-      if (th.dataset.key === sortKey) arrow.textContent = sortAsc ? '▲' : '▼';
-    });
-
-    syncStickyColWidth();
+  function renderSide(k) {
+    const S = TS[k], el = $('t-side-' + k);
+    const pool = ownedPlayers(k);
+    const byPid = new Map(pool.map(p => [p.pid, p]));
+    const chosen = S.players.map(pid => byPid.get(pid) || { pid, name: nameOf(pid), pos: '', cells: {} });
+    const left = pool.filter(p => !S.players.includes(p.pid)).sort((a, b) => seasonAmt(b) - seasonAmt(a));
+    const dup = new Set(); { const seen = new Set(); for (const p of left) { if (seen.has(p.name)) dup.add(p.name); seen.add(p.name); } }
+    const optLabel = (p) => [p.name, p.pos || '-', ...(dup.has(p.name) ? [p.no ? p.no + '번' : '등번호 없음', p.by ? p.by + '년생' : ''] : []), `${TS.season} ${fmtEok2(seasonAmt(p))}억`].filter(Boolean).join(' · ') + ` (#${p.pid})`;
+    const picksHtml = S.picks.map((pk, i) => {
+      const owned = ownedOrigs(S.team, pk.year, pk.round).filter(o => !S.picks.some((q, j) => j !== i && q.year === pk.year && q.round === pk.round && q.orig === o));
+      if (owned.length === 1 && pk.orig !== owned[0]) pk.orig = owned[0];
+      if (pk.orig && !owned.includes(pk.orig)) pk.orig = null;
+      const chips = !owned.length ? '<span class="chip-hint">이 라운드 지명권이 없습니다</span>'
+        : owned.length === 1 ? `<span class="chip on fixed">${esc(pickOverall({ ...pk, orig: owned[0] }) ? `전체 ${pickOverall({ ...pk, orig: owned[0] })}순위` : '순번 미정')}${owned[0] !== S.team ? ` (${esc(owned[0])})` : ''}</span>`
+        : owned.map(o => { const ov = pickOverall({ ...pk, orig: o }); return `<button type="button" class="chip ${pk.orig === o ? 'on' : ''}" data-f="porig" data-i="${i}" data-orig="${esc(o)}" title="${esc(o)} 원래 지명권">${ov ? `전체 ${ov}순위` : '순번 미정'}${o !== S.team ? ` (${esc(o)})` : ''}</button>`; }).join('')
+          + (pk.orig ? '' : '<span class="chip-hint">줄 픽을 고르세요</span>');
+      return `<div class="pick-row">
+        <select data-f="py" data-i="${i}" aria-label="드래프트 연도">${PICK_YEARS.map(y => `<option value="${y}" ${y === pk.year ? 'selected' : ''}>${y}년</option>`).join('')}</select>
+        <select data-f="pr" data-i="${i}" aria-label="라운드">${Array.from({ length: ROUNDS }, (_, r) => `<option value="${r + 1}" ${r + 1 === pk.round ? 'selected' : ''}>${r + 1}라운드</option>`).join('')}</select>
+        <span class="chips">${chips}</span>
+        <button type="button" class="x-btn" data-f="pdel" data-i="${i}" title="지명권 빼기">×</button></div>`;
+    }).join('');
+    el.innerHTML = `
+      <label class="tr-sec-h" style="display:block">구단${k === 'A' ? '1' : '2'}
+        <select class="team-sel" data-f="team">${TEAMS.map(t => `<option value="${esc(t)}" ${t === S.team ? 'selected' : ''}>${esc(teamMeta[t].full)}</option>`).join('')}</select></label>
+      <div><div class="tr-sec-h"><span>보내는 선수</span><span class="hint">${S.players.length}/5</span></div>
+        <ul class="tr-items">${chosen.map(p => `<li><b>${esc(p.name)}</b><span class="sub">${esc(p.pos || '')}${p.cells[TS.season]?.k === 'G' ? ' · 다년계약' : p.cells[TS.season]?.k === 'P' ? ' · 재계약 예측' : ''}</span>
+          <span class="amt">${p.cells[TS.season] ? fmtEok2(seasonAmt(p)) + '억' : '—'}</span><button type="button" class="x-btn" data-f="pdrop" data-pid="${esc(p.pid)}" title="빼기">×</button></li>`).join('')}</ul>
+        ${S.players.length < 5 ? `<input data-f="padd" list="t-pl-${k}" autocomplete="off" placeholder="선수 이름으로 추가"><datalist id="t-pl-${k}">${left.map(p => `<option value="${esc(optLabel(p))}"></option>`).join('')}</datalist>` : ''}
+      </div>
+      <div><div class="tr-sec-h"><span>현금 (억)</span><span class="hint">0~100억</span></div>
+        <input data-f="cash" type="number" min="0" max="100" step="0.5" value="${S.cash || 0}"></div>
+      <div><div class="tr-sec-h"><span>지명권</span><span class="hint">${S.picks.length}/2 · 연도와 라운드를 고르면 전체 순번이 나옵니다</span></div>
+        ${picksHtml}
+        ${S.picks.length < 2 ? `<button type="button" class="btn sm" data-f="padd-pick">+ 지명권</button>` : ''}</div>`;
   }
 
-  // 2열(선수명)의 sticky left 값은 1열(순위) 실제 렌더링 너비에 달려 있고,
-  // 그 너비는 폰트 크기/패딩(모바일 미디어쿼리)에 따라 달라지므로 매 렌더링과
-  // 리사이즈마다 실측해서 --col1-w 커스텀 프로퍼티에 반영한다.
+  function readTrade() {
+    const errs = [];
+    const it = { id: TS.editId || ('tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), type: 'trade',
+                 teamA: TS.A.team, teamB: TS.B.team, season: TS.season, createdAt: TS.createdAt, updatedAt: Date.now(),
+                 sideA: { players: [...TS.A.players], cash: num(TS.A.cash), picks: TS.A.picks.map(p => ({ ...p })) },
+                 sideB: { players: [...TS.B.players], cash: num(TS.B.cash), picks: TS.B.picks.map(p => ({ ...p })) },
+                 note: $('t-note').value.trim().slice(0, 200) };
+    if (it.teamA === it.teamB) errs.push('서로 다른 두 구단을 고르세요.');
+    for (const [k, s, team] of [['A', it.sideA, it.teamA], ['B', it.sideB, it.teamB]]) {
+      if (!s.players.length && !(s.cash > 0) && !s.picks.length) errs.push(`${team}가 보내는 선수·현금·지명권이 하나도 없습니다.`);
+      if (s.cash < 0 || s.cash > 100) errs.push('현금은 0~100억 사이로 넣으세요.');
+      const pool = new Set(ownedPlayers(k).map(p => p.pid));
+      for (const pid of s.players) if (!pool.has(pid)) errs.push(`${nameOf(pid)}는 ${TS.season}년에 ${team} 소속이 아닙니다.`);
+      for (const pk of s.picks) if (!pk.orig) errs.push(`${team}의 ${pk.year} ${pk.round}라운드: 줄 지명권을 고르세요.`);
+    }
+    return { it, errs: [...new Set(errs)] };
+  }
+
+  function tradePreview() {
+    const { it, errs } = readTrade();
+    $('t-err').textContent = TS.tried ? (errs[0] || '') : '';
+    const others = store.items.filter(x => x.id !== TS.editId);
+    const after = errs.length ? null : buildModel(sortedItems([...others, it]));
+    const y = TS.season, cap = capOf(y);
+    const line = (from, to, s) => `<b style="font-family:inherit">${esc(from)} → ${esc(to)}</b>: ${esc(sideText(s, from))}`;
+    let html = `${line(it.teamA, it.teamB, it.sideA)}<br>${line(it.teamB, it.teamA, it.sideB)}`;
+    if (after) {
+      html += '<div class="tr-delta">' + [it.teamA, it.teamB].map(t => {
+        const b = TS.now.teams[t].years[y].top40, a = after.teams[t].years[y].top40, d = a - b;
+        return `<div>${esc(t)} ${y} 상위 40인<br><b>${fmtEok(b)}</b> → <b class="${a > cap ? 'over' : ''}">${fmtEok(a)}억</b> (${d >= 0 ? '+' : '−'}${fmtEok(Math.abs(d))}) ${a > cap ? '<span class="over">상한 초과</span>' : `<span class="hint">여유 ${fmtEok(cap - a)}</span>`}</div>`;
+      }).join('') + '</div>';
+      if (after.warns.length > TS.now.warns.length) html += `<div class="ferr">${esc(after.warns[after.warns.length - 1])}</div>`;
+    }
+    $('t-preview').innerHTML = html;
+  }
+
+  function rerenderTrade() { renderSide('A'); renderSide('B'); tradePreview(); }
+
+  function openTrade(opt = {}) {
+    const c = opt.editId ? store.items.find(x => x.id === opt.editId) : null;
+    TS = { editId: c?.id || null, createdAt: c?.createdAt || Date.now(), season: c?.season || YEARS[0], tried: false,
+           A: c ? { team: c.teamA, ...clone(c.sideA) } : emptySide(opt.team || currentTeam || TEAMS[0]),
+           B: c ? { team: c.teamB, ...clone(c.sideB) } : emptySide(TEAMS.find(t => t !== (opt.team || currentTeam)) || TEAMS[1]) };
+    for (const k of ['A', 'B']) { TS[k].players ||= []; TS[k].picks ||= []; TS[k].cash = num(TS[k].cash); }
+    TS.base = tradeBase();
+    TS.now = buildModel(sortedItems(store.items.filter(x => x.id !== TS.editId)));
+    $('t-season').value = String(TS.season);
+    $('t-note').value = c?.note || '';
+    $('tr-title').textContent = c ? '트레이드 수정' : '트레이드';
+    rerenderTrade();
+    $('tr-modal').classList.add('open');
+  }
+
+  for (const k of ['A', 'B']) {
+    const el = $('t-side-' + k);
+    el.addEventListener('change', (e) => {
+      const f = e.target.dataset.f, S = TS[k], i = +e.target.dataset.i;
+      if (f === 'team') {
+        if (e.target.value === TS[sideOther(k)].team) TS[sideOther(k)] = emptySide(S.team);   // 같은 구단을 고르면 서로 바꾼다
+        TS[k] = emptySide(e.target.value);
+        rerenderTrade();
+      } else if (f === 'padd') {
+        const m = e.target.value.match(/\(#([^)]+)\)\s*$/);
+        const pool = ownedPlayers(k).filter(p => !S.players.includes(p.pid));
+        const p = m ? pool.find(x => x.pid === m[1]) : (pool.filter(x => x.name === e.target.value.trim()).length === 1 ? pool.find(x => x.name === e.target.value.trim()) : null);
+        if (p && S.players.length < 5) { S.players.push(p.pid); renderSide(k); tradePreview(); el.querySelector('[data-f="padd"]')?.focus(); }
+        else if (e.target.value.trim()) $('t-err').textContent = `${S.team} 선수 목록에서 고르세요. 동명이인은 목록의 등번호·생년으로 구분됩니다.`;
+      } else if (f === 'py' || f === 'pr') {
+        const pk = S.picks[i];
+        if (f === 'py') pk.year = +e.target.value; else pk.round = +e.target.value;
+        pk.orig = null;
+        renderSide(k); tradePreview();
+      }
+    });
+    el.addEventListener('input', (e) => {
+      if (e.target.dataset.f === 'cash') { TS[k].cash = Math.min(100, Math.max(0, num(e.target.value))); tradePreview(); }
+    });
+    el.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-f]'); if (!b) return;
+      const f = b.dataset.f, S = TS[k], i = +b.dataset.i;
+      if (f === 'pdrop') { S.players = S.players.filter(x => x !== b.dataset.pid); renderSide(k); tradePreview(); }
+      else if (f === 'padd-pick' && S.picks.length < 2) { S.picks.push({ year: PICK_YEARS[0], round: 1, orig: null }); renderSide(k); tradePreview(); }
+      else if (f === 'pdel') { S.picks.splice(i, 1); renderSide(k); tradePreview(); }
+      else if (f === 'porig') { S.picks[i].orig = b.dataset.orig; renderSide(k); tradePreview(); }
+    });
+  }
+  $('t-season').addEventListener('change', () => { TS.season = +$('t-season').value; rerenderTrade(); });
+  $('t-note').addEventListener('input', () => {});
+  $('t-cancel').addEventListener('click', () => $('tr-modal').classList.remove('open'));
+  $('tr-modal').addEventListener('click', (e) => { if (e.target === $('tr-modal')) $('tr-modal').classList.remove('open'); });
+  $('t-save').addEventListener('click', async () => {
+    TS.tried = true;
+    const { it, errs } = readTrade();
+    if (errs.length) { $('t-err').textContent = errs[0]; return; }
+    $('t-save').disabled = true;
+    await store.put(it);
+    $('t-save').disabled = false;
+    $('tr-modal').classList.remove('open');
+    refresh();
+  });
+  $('cc-trade').addEventListener('click', () => openTrade({}));
+
+  // ---------------- 시작 ----------------
   function syncStickyColWidth() {
     const table = document.getElementById('roster-table');
     const firstTh = table.querySelector('thead th:first-child');
-    if (!firstTh) return;
-    table.style.setProperty('--col1-w', firstTh.getBoundingClientRect().width + 'px');
+    if (firstTh) table.style.setProperty('--col1-w', firstTh.getBoundingClientRect().width + 'px');
   }
   window.addEventListener('resize', syncStickyColWidth);
 
-  document.querySelectorAll('thead th').forEach(th => {
-    th.addEventListener('click', () => {
-      const key = th.dataset.key;
-      if (sortKey === key) { sortAsc = !sortAsc; }
-      else { sortKey = key; sortAsc = key === 'name' || key === 'pos' || key === 'type'; }
-      renderTable([...allTeams[currentTeam].modes[pieMode].players]);
-    });
-  });
+  function refresh() {
+    compute();
+    if (!currentTeam) currentTeam = order()[0];
+    teamSel.innerHTML = TEAMS.slice().sort((a, b) => topOf(b, 2027) - topOf(a, 2027)).map(t => `<option value="${esc(t)}">${esc(teamMeta[t].full)}</option>`).join('');
+    teamSel.value = currentTeam;
+    renderTeam(); renderCustomTab();
+  }
 
-  select.addEventListener('change', () => { currentTeam = select.value; sortKey = 'rank'; sortAsc = true; renderTeam(); });
-
-  renderTeam();
+  seasonSel.addEventListener('change', () => { year = +seasonSel.value; sortKey = 'cur'; sortAsc = false; renderTeam(); });
+  teamSel.addEventListener('change', () => { currentTeam = teamSel.value; sortKey = 'cur'; sortAsc = false; renderTeam(); });
+  document.querySelectorAll('.tabbar [data-tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  document.getElementById('cc-apply').addEventListener('change', refresh);
+  document.getElementById('fix-wrap').innerHTML = D.fixes.length
+    ? '<br>데이터 보정: <ul class="fix-list">' + D.fixes.map(f => `<li>${esc(f)}</li>`).join('') + '</ul>' : '';
+  if (location.hash === '#custom') setTab('custom');
+  store.init(refresh);
 })();
 </script>
-
 </body>
 </html>
