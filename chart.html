@@ -928,7 +928,7 @@
         let dst = T[to].players.find(p => p.pid === pid);
         if (!dst) {
           const g = T[to].gone.find(x => x.pid === pid);
-          dst = { ...src, cells: {}, ex: false, y2026: null, ten: g?.ten || 0, ct: (src.ct || []).map(x => ({ ...x, team: to })), custom: null, tradeOut: null, tradeIn: null };
+          dst = { ...src, cells: {}, ex: g ? !!g.ex : false, y2026: g ? g.y2026 : null, ten: g?.ten || 0, ct: (src.ct || []).map(x => ({ ...x, team: to })), custom: null, tradeOut: null, tradeIn: null };
           T[to].players.push(dst);
         }
         // 공시 전까지는 직전 프로젝션(재계약 예측·계약 산정액)을 그대로, 계약금 몫도 받는 구단이 전부 (옵트아웃 잔여분은 원소속 구단에 남김)
@@ -956,7 +956,7 @@
     const T = {};
     for (const t of TEAMS) {
       const b = D.teams[t];
-      T[t] = { y2026: b.y2026, ex: b.ex, players: b.players.map(p => ({ ...p, cells: clone(p.cells), custom: null })), gone: b.gone.map(g => ({ ...g })) };
+      T[t] = { y2026: b.y2026, ex: b.ex, players: b.players.map(p => ({ ...p, cells: clone(p.cells), custom: null })), gone: b.gone.map(g => ({ ...g, cells: {}, isGone: true })) };
     }
     const holders = (pid) => TEAMS.flatMap(t => T[t].players.filter(p => p.pid === pid).map(p => [t, p]));
     const goneOf = (pid) => TEAMS.flatMap(t => T[t].gone.filter(g => g.pid === pid).map(g => [t, g]));
@@ -984,9 +984,11 @@
       let target = hs.find(([t]) => t === c.team)?.[1];
       if (!target) {
         const src = hs[0]?.[1] || goneOf(c.pid)[0]?.[1] || {};
-        const sameTeamTen = goneOf(c.pid).find(([t]) => t === c.team)?.[1]?.ten || 0;
-        target = { pid: c.pid, name: c.name || src.name || '', pos: c.pos || src.pos || '', age: src.age ?? null, ex: false, y2026: null,
-                   prev: null, cells: {}, ten: sameTeamTen, ct: [], custom: null };
+        // 같은 구단의 '떠나는 선수'(FA 등)로 있던 선수와 재계약하면 그 구단의 2026 기록(실제 산정액·예외선수)을 그대로 이어 받는다
+        const sameTeamGone = goneOf(c.pid).find(([t]) => t === c.team)?.[1];
+        target = { pid: c.pid, name: c.name || src.name || '', pos: c.pos || src.pos || '', age: src.age ?? null,
+                   ex: sameTeamGone ? !!sameTeamGone.ex : false, y2026: sameTeamGone ? sameTeamGone.y2026 : null,
+                   prev: null, cells: {}, ten: sameTeamGone?.ten || 0, ct: [], custom: null, no: src.no, by: src.by };
         T[c.team].players.push(target);
       }
       Object.assign(target.cells, cells);
@@ -1044,7 +1046,7 @@
 
   // 2026은 실제 산정액(KBO 기준, 떠난 선수 포함). 그해 예외선수는 데이터에 표시된 1명(p.ex)
   function year2026(X) {
-    const ent = [...X.players, ...X.gone].filter(p => p.y2026 != null);
+    const ent = [...X.players, ...X.gone.filter(g => !g.hide)].filter(p => p.y2026 != null);
     const f = (p) => (p.ex ? 0.5 : 1);
     const ranked = ent.slice().sort((a, b) => f(b) * b.y2026 - f(a) * a.y2026);
     const exP = ent.find(p => p.ex);
@@ -1181,7 +1183,8 @@
       if (effKey === 'type') return (year === 2026 ? (p.ex ? 'A' : 'B') : (p.cells[year]?.k)) || 'Z';
       return cellVal(p, +effKey);
     };
-    const rows = T.players.slice().sort((a, b) => {
+    const base = year === 2026 ? [...T.players, ...T.gone.filter(g => !g.hide && g.y2026 != null)] : T.players;
+    const rows = base.slice().sort((a, b) => {
       const va = keyVal(a), vb = keyVal(b);
       if (va < vb) return sortAsc ? -1 : 1; if (va > vb) return sortAsc ? 1 : -1; return cellVal(b, year) - cellVal(a, year);
     });
@@ -1191,6 +1194,7 @@
       const end = Math.max(0, ...Object.values(p.cells).map(c => c.end || 0));
       const exYears = YEARS.filter(y => p.cells[y]?.ex);
       const badges = [
+        p.isGone ? `<span class="badge ${p.status === 'FA' ? 'gen' : 'moved'}" title="2026 시즌 후 팀을 떠난 선수: 2026 산정에는 포함">${esc(p.status === 'FA' ? 'FA 자격 (잔류 미정)' : p.status)}</span>` : '',
         p.tradeOut ? `<span class="badge moved" title="커스텀 트레이드로 이적">→ ${esc(p.tradeOut)} 트레이드</span>` : '',
         p.tradeIn ? `<span class="badge moved" title="커스텀 트레이드로 영입">${esc(p.tradeIn)}에서 트레이드</span>` : '',
         p.custom && !p.tradeIn && !p.tradeOut ? `<span class="badge pred" title="커스텀 계약이 반영된 선수">커스텀</span>` : '',
@@ -1218,7 +1222,7 @@
       }).join('');
       return `<tr class="${(year === 2026 ? p.y2026 != null : p.cells[year]) ? '' : 'outside40'}">
         <td class="rank ${top ? 'cap-target' : ''}">${r ?? '—'}</td>
-        <td class="name">${esc(p.name)}<button type="button" class="btn sm row-act" data-pid="${esc(p.pid)}" data-team="${esc(currentTeam)}" title="이 선수 계약 만들기·수정·삭제">✎</button></td>
+        <td class="name">${esc(p.name)}<button type="button" class="btn sm row-act" data-pid="${esc(p.pid)}" data-team="${esc(currentTeam)}"${p.isGone ? ' data-gone="1"' : ''} title="이 선수 계약 만들기·수정·삭제">✎</button></td>
         <td>${esc(p.pos)}</td><td class="mono num">${p.age ?? '—'}</td>
         <td>${badges}</td>${cells}</tr>`;
     }).join('');
@@ -1237,7 +1241,7 @@
       if (k === effKey) sortAsc = !sortAsc; else { sortKey = k; sortAsc = ['rank', 'name', 'pos', 'type'].includes(k); }
       renderTable();
     }));
-    document.querySelectorAll('#roster-body .row-act').forEach(b => b.addEventListener('click', () => openForm({ pid: b.dataset.pid, team: b.dataset.team })));
+    document.querySelectorAll('#roster-body .row-act').forEach(b => b.addEventListener('click', () => b.dataset.gone ? openForm({ pid: b.dataset.pid, type: 'new' }) : openForm({ pid: b.dataset.pid, team: b.dataset.team })));
     syncStickyColWidth();
   }
 
