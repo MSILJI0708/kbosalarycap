@@ -377,7 +377,7 @@
       각 선수의 KBO 등록일수(SeasonReg)를 근거로 완성 정규시즌 수를 계산합니다.
       한 시즌에 145일 이상 등록되면 단독으로 1시즌, 미달 시즌들은 국가대표 보상일수와
       함께 모아 145일을 넘길 수 있는 조합을 찾아 시즌으로 인정합니다.
-      2026시즌이 끝난 뒤의 최종 등록일수로 다시 계산했습니다(2026년 11월 26일 조회). "FA까지"는 2027시즌부터 더 뛰어야 하는 시즌 수이고, "충족"은 이번 오프시즌에 FA 신청이 가능한 선수입니다.
+      2026시즌이 끝난 뒤의 최종 등록일수로 다시 계산했습니다(2026년 11월 26일 조회). "FA까지"는 2027시즌부터 더 뛰어야 하는 시즌 수이고, "충족"은 KBO가 공시한 2027 FA 승인 선수입니다(자격을 얻고 신청하지 않은 선수는 1시즌으로 표기).
     </p>
   </div>
 </div>
@@ -614,6 +614,19 @@
 
   render();
 })();
+</script>
+<script>
+// Claude 페이지(아티팩트)는 한 페이지짜리라 다른 페이지(chart2026.html 등)가 없다 -> GitHub Pages 주소로 새 탭에서 연다
+!function linkToPages() {
+  var h = location.hostname;
+  if (/github\.io$/.test(h) || h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:') return;
+  var base = 'https://msilji0708.github.io/kbosalarycap/';
+  document.querySelectorAll('.chapter-nav a[href]').forEach(function (a) {
+    var f = a.getAttribute('href');
+    if (/^(https?:|#)/.test(f)) return;
+    a.href = base + f; a.target = '_blank'; a.rel = 'noopener'; a.title = 'GitHub Pages에서 새 탭으로 열기';
+  });
+}();
 </script>
 
 </body>

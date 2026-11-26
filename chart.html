@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KBO 샐러리캡 2027-2031</title>
+<script>try { var _t = localStorage.getItem('kbo-theme'); if (_t === 'light' || _t === 'dark') document.documentElement.setAttribute('data-theme', _t); } catch (e) {}</script>
 <style>
 
   :root {
@@ -539,7 +540,33 @@
   .tabbar button { font: inherit; font-weight: 700; font-size: 14px; padding: 10px 14px; min-height: 44px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--ink-2); cursor: pointer; }
   .tabbar button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
   .tabbar button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .tabbar .cc-toggle { margin-left: auto; font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+  :root { color-scheme: light dark; }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  .tabbar .toggles { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding: 4px 0; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; user-select: none; }
+  .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .switch .track { position: relative; width: 36px; height: 20px; border-radius: 10px; background: var(--line-strong); transition: background .15s; flex: none; }
+  .switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform .15s; }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::after { transform: translateX(16px); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .switch.warn input:checked + .track { background: var(--critical); }
+  .theme-dock { position: fixed; top: 12px; right: 12px; z-index: 70; display: flex; align-items: center; flex-direction: row-reverse; gap: 4px;
+    padding: 4px; border-radius: 22px; background: var(--card); border: 1px solid var(--line-strong); box-shadow: var(--shadow); }
+  .theme-dock .theme-cur { width: 34px; height: 34px; border-radius: 50%; border: 0; background: transparent; color: var(--ink); cursor: pointer; display: grid; place-items: center; }
+  .theme-dock .theme-menu { display: flex; gap: 2px; max-width: 0; overflow: hidden; opacity: 0; transition: max-width .2s, opacity .15s; }
+  .theme-dock:hover .theme-menu, .theme-dock:focus-within .theme-menu, .theme-dock.open .theme-menu { max-width: 260px; opacity: 1; }
+  .theme-dock .theme-menu button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 700; padding: 7px 10px; border-radius: 16px; cursor: pointer; white-space: nowrap; }
+  .theme-dock .theme-menu button[aria-checked="true"] { background: var(--accent); color: #fff; }
+  .theme-dock .theme-menu button:hover { background: var(--row-stripe); }
+  .theme-dock .theme-menu button[aria-checked="true"]:hover { background: var(--accent); }
+  .cap-viol { color: var(--critical); font-weight: 700; }
+  .badge.ex { background: color-mix(in srgb, var(--cat-5) 18%, var(--card)); color: var(--cat-5); }
+  /* 예외선수 50% 감면 칸: 보라 배경 + 보라 글자, 앞에 ½ 표시 */
+  td.yc.exc { background: color-mix(in srgb, var(--cat-5) 14%, transparent); }
+  td.yc .is-ex { color: var(--cat-5) !important; font-weight: 800; }
+  td.yc .is-ex::before { content: "½ "; font-size: .78em; font-weight: 800; opacity: .85; }
   .count-pill { display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
   .btn { font: inherit; font-size: 13px; font-weight: 700; min-height: 36px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -560,7 +587,7 @@
   .modal h3 { margin: 0 0 12px; font-size: 20px; }
   .fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 14px; }
   .fgrid label, .frow label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--ink-2); }
-  .fgrid input, .fgrid select, .frow input, .frow select, .frow textarea { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--control-bg); color: var(--control-tx); min-height: 40px; color-scheme: light dark; }
+  .fgrid input, .fgrid select, .frow input, .frow select, .frow textarea { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--control-bg); color: var(--control-tx); min-height: 40px; }
   .fgrid input::placeholder, .frow input::placeholder, .frow textarea::placeholder { color: var(--muted); opacity: 1; }
   .fgrid select option, .frow select option { background: var(--control-bg); color: var(--control-tx); }
   .frow { margin: 10px 0; }
@@ -576,7 +603,7 @@
   .tr-grid { display: grid; grid-template-columns: minmax(0,1fr) 28px minmax(0,1fr); gap: 10px; align-items: start; margin-top: 4px; }
   .tr-swap { align-self: center; text-align: center; font-size: 22px; color: var(--muted); }
   .tr-side { border: 1px solid var(--line-strong); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-  .tr-side input, .tr-side select { font: inherit; font-size: 16px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--control-bg); color: var(--control-tx); min-height: 38px; color-scheme: light dark; width: 100%; box-sizing: border-box; }
+  .tr-side input, .tr-side select { font: inherit; font-size: 16px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--control-bg); color: var(--control-tx); min-height: 38px; width: 100%; box-sizing: border-box; }
   .tr-side input::placeholder { color: var(--muted); opacity: 1; }
   .tr-side select option { background: var(--control-bg); color: var(--control-tx); }
   .tr-side .team-sel { font-weight: 800; font-size: 17px; }
@@ -607,6 +634,14 @@
 </style>
 </head>
 <body>
+<div class="theme-dock" id="theme-dock">
+  <button type="button" class="theme-cur" id="theme-cur" aria-label="화면 테마 바꾸기" aria-expanded="false" title="화면 테마"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg></button>
+  <div class="theme-menu" role="radiogroup" aria-label="화면 테마">
+    <button type="button" role="radio" data-theme-set="auto" aria-checked="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg><span>시스템</span></button>
+    <button type="button" role="radio" data-theme-set="light" aria-checked="false"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>라이트</span></button>
+    <button type="button" role="radio" data-theme-set="dark" aria-checked="false"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span>다크</span></button>
+  </div>
+</div>
 <div class="hero" id="hero">
   <div class="hero-inner">
     <div class="chapter-nav"><a href="chart2026.html">← 2026 경쟁균형세 현황</a><a href="fa.html">FA 서비스타임 현황 보기 →</a><a href="comp.html">FA 보상선수 시뮬레이터 →</a></div>
@@ -630,7 +665,10 @@
   <div class="tabbar" role="tablist">
     <button type="button" role="tab" id="tab-btn-team" aria-selected="true" data-tab="team">구단별 현황</button>
     <button type="button" role="tab" id="tab-btn-custom" aria-selected="false" data-tab="custom">커스텀 계약<span class="count-pill" id="cc-count">0</span></button>
-    <label class="cc-toggle"><input type="checkbox" id="cc-apply" checked> 커스텀 계약 반영</label>
+    <div class="toggles">
+      <label class="switch warn" title="끄면 옵션을 상한까지만 실행하고, 옵션을 다 내려도 넘는 계약·트레이드는 저장하지 않습니다"><input type="checkbox" id="cap-over" role="switch"><span class="track"></span><span>샐러리캡 초과 허용</span></label>
+      <label class="switch" title="내가 만든 계약·트레이드를 표에 반영"><input type="checkbox" id="cc-apply" role="switch" checked><span class="track"></span><span>커스텀 계약 반영</span></label>
+    </div>
   </div>
   <section id="tab-custom" hidden>
     <div class="cc-head">
@@ -770,6 +808,19 @@
   </div>
 </div>
 
+<script>
+// Claude 페이지(아티팩트)는 한 페이지짜리라 다른 페이지(chart2026.html 등)가 없다 -> GitHub Pages 주소로 새 탭에서 연다
+!function linkToPages() {
+  var h = location.hostname;
+  if (/github\.io$/.test(h) || h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:') return;
+  var base = 'https://msilji0708.github.io/kbosalarycap/';
+  document.querySelectorAll('.chapter-nav a[href]').forEach(function (a) {
+    var f = a.getAttribute('href');
+    if (/^(https?:|#)/.test(f)) return;
+    a.href = base + f; a.target = '_blank'; a.rel = 'noopener'; a.title = 'GitHub Pages에서 새 탭으로 열기';
+  });
+}();
+</script>
 <script id="team-meta-data" type="application/json">
 {"삼성": {"full": "삼성 라이온즈", "base": "#0a2a5e", "base2": "#123a7a", "accent": "#c9a13b"}, "LG": {"full": "LG 트윈스", "base": "#0c1e3e", "base2": "#132a52", "accent": "#c8102e"}, "KT": {"full": "kt wiz", "base": "#0a0a0a", "base2": "#1a1a1a", "accent": "#eb1e32"}, "KIA": {"full": "KIA 타이거즈", "base": "#06141f", "base2": "#141f2b", "accent": "#ea0029"}, "두산": {"full": "두산 베어스", "base": "#10132a", "base2": "#1a1f3d", "accent": "#ed1c24"}, "한화": {"full": "한화 이글스", "base": "#1a1a1a", "base2": "#2a2a2a", "accent": "#ff6600"}, "NC": {"full": "NC 다이노스", "base": "#16324f", "base2": "#1d467f", "accent": "#c4a265"}, "롯데": {"full": "롯데 자이언츠", "base": "#061d30", "base2": "#0d2c47", "accent": "#d0103a"}, "SSG": {"full": "SSG 랜더스", "base": "#11121a", "base2": "#1c1d29", "accent": "#ce0e2d"}, "키움": {"full": "키움 히어로즈", "base": "#3a1019", "base2": "#4a1420", "accent": "#b99d6b"}}
 </script>
@@ -942,37 +993,84 @@
       target.custom = c.id;
       for (const [t, g] of goneOf(c.pid)) { if (t === c.team) g.hide = true; else g.status = `${c.team} 이적 (커스텀)`; }
     }
-    for (const t of TEAMS) { T[t].years = {}; for (const y of YEARS) T[t].years[y] = teamYear(T[t], y); }
+    for (const t of TEAMS) { T[t].years = {}; for (const y of YEARS) T[t].years[y] = teamYear(T[t], y); T[t].years[2026] = year2026(T[t]); }
     return { teams: T, picks, warns };
   }
 
+  // 샐러리캡 초과 허용(토글)이 꺼져 있으면, 상한을 넘을 때 옵션 실행률을 낮춰 상위 40인 합계를 딱 상한에 맞춘다.
+  // 옵션을 낮추면 예외선수(50%)와 상위 40인 구성도 바뀔 수 있어서, 실행률 r마다 둘을 다시 고르고
+  // 합계가 상한 이하가 되는 가장 큰 r을 이분 탐색으로 찾는다 (합계는 r에 대해 단조 증가).
+  let ALLOW_OVER = false;
   function teamYear(X, y) {
     const ent = X.players.filter(p => p.cells[y]).map(p => ({ p, c: p.cells[y] }));
-    // 예외선수(제185조): 그해 그 구단 7시즌 이상 소속 중 산정액 최대 1명, 상한 계산에서만 50%
-    let ex = null;
-    for (const e of ent) {
-      if (e.c.k === 'D' || (e.p.ten || 0) + (y - 2026) < 7) continue;
-      if (!ex || e.c.v > ex.c.v) ex = e;
-    }
-    for (const e of ent) e.c.ex = e === ex;
-    const f = (e) => (e.c.ex ? 0.5 : 1);
-    const lo = (e) => ('GS'.includes(e.c.k) ? (e.c.lo ?? e.c.v) : e.c.v);
-    const top = ent.slice().sort((a, b) => f(b) * b.c.v - f(a) * a.c.v).slice(0, 40);
-    // 옵션 실행률 기본값: 상한에 걸리지 않으면 100%, 걸리면 딱 상한까지만
+    const lo = (e) => ('GS'.includes(e.c.k) ? (e.c.lo ?? e.c.v) : e.c.v);   // 보장 구간의 옵션 몫만 조절 대상
     const cap = capOf(y);
-    const base = top.reduce((s, e) => s + f(e) * lo(e), 0);
-    const opts = top.reduce((s, e) => s + f(e) * (e.c.v - lo(e)), 0);
-    const rate = (base + opts <= cap || opts <= 0) ? 1 : Math.max(0, Math.min(1, (cap - base) / opts));
+    const evalAt = (r) => {
+      const eff = (e) => lo(e) + r * (e.c.v - lo(e));
+      // 예외선수(제185조): 그해 그 구단 7시즌 이상 소속 중 산정액 최대 1명, 상한 계산에서만 50%
+      let ex = null;
+      for (const e of ent) {
+        if (e.c.k === 'D' || (e.p.ten || 0) + (y - 2026) < 7) continue;
+        if (!ex || eff(e) > eff(ex)) ex = e;
+      }
+      const fx = (e) => (e === ex ? 0.5 : 1);
+      const ranked = ent.slice().sort((a, b) => fx(b) * eff(b) - fx(a) * eff(a));
+      const top = ranked.slice(0, 40);
+      return { r, ex, ranked, top, fx, eff, total: top.reduce((s, e) => s + fx(e) * eff(e), 0) };
+    };
+    const full = evalAt(1), none = evalAt(0);
+    let best = full;
+    if (!ALLOW_OVER && full.total > cap && full.total > none.total) {
+      if (none.total >= cap) best = none;
+      else {
+        let a = 0, b = 1;
+        for (let i = 0; i < 30; i++) { const m = (a + b) / 2; if (evalAt(m).total <= cap) a = m; else b = m; }
+        best = evalAt(a);
+      }
+    }
+    const rate = best.r;
     const parts = { G: 0, O: 0, P: 0, S: 0, D: 0 };
-    for (const e of top) { e.c.eff = lo(e) + rate * (e.c.v - lo(e)); parts[e.c.k] += f(e) * e.c.eff; }
-    for (const e of ent) if (e.c.eff == null) e.c.eff = lo(e) + rate * (e.c.v - lo(e));
+    for (const e of ent) { e.c.ex = e === best.ex; e.c.eff = best.eff(e); }
+    for (const e of best.top) parts[e.c.k] += best.fx(e) * e.c.eff;
     const floorBasis = ent.map(e => e.c.lo ?? e.c.v).sort((a, b) => b - a).slice(0, 40).reduce((s, v) => s + v, 0);
+    const top40 = parts.G + parts.O + parts.P + parts.S + parts.D;
     return {
-      top40: parts.G + parts.O + parts.P + parts.S + parts.D, ex: ex ? ex.p.name : '', rate,
+      top40, ex: best.ex ? best.ex.p.name : '', rate, full: full.total, minTotal: none.total, over: top40 > cap + 1,
       guar: parts.G + parts.S + parts.D, dead: parts.D, opt: parts.O, pred: parts.P, count: ent.length,
       contracted: ent.filter(e => 'GOS'.includes(e.c.k)).length, floor_basis: floorBasis,
-      topSet: new Set(top.map(e => e.p)), rankOf: new Map(ent.slice().sort((a, b) => f(b) * b.c.v - f(a) * a.c.v).map((e, i) => [e.p, i + 1])),
+      topSet: new Set(best.top.map(e => e.p)), rankOf: new Map(best.ranked.map((e, i) => [e.p, i + 1])),
     };
+  }
+
+  // 2026은 실제 산정액(KBO 기준, 떠난 선수 포함). 그해 예외선수는 데이터에 표시된 1명(p.ex)
+  function year2026(X) {
+    const ent = [...X.players, ...X.gone].filter(p => p.y2026 != null);
+    const f = (p) => (p.ex ? 0.5 : 1);
+    const ranked = ent.slice().sort((a, b) => f(b) * b.y2026 - f(a) * a.y2026);
+    const exP = ent.find(p => p.ex);
+    return { top40: X.y2026, ex: exP ? exP.name : (X.ex || ''), rate: 1, over: X.y2026 > capOf(2026) + 1,
+             contracted: X.players.filter(p => p.y2026 != null).length, rankOf: new Map(ranked.map((p, i) => [p, i + 1])), actual: true };
+  }
+
+  // 초과 허용이 꺼져 있을 때 저장을 막을 위반: 상한이 발표된 해에, 옵션을 모두 내려도 상한을 넘고 그 변경으로 더 늘어난 경우
+  function capViolations(after, before, teams) {
+    if (ALLOW_OVER) return [];
+    const out = [];
+    for (const t of [...new Set(teams)].filter(Boolean)) for (const y of YEARS) {
+      if (!capKnown(y)) continue;
+      const a = after.teams[t].years[y], b = before.teams[t].years[y];
+      if (a.top40 > capOf(y) + 1 && a.top40 > b.top40 + 1)
+        out.push(`${t} ${y}년 상위 40인 ${fmtEok(a.top40)}억: 옵션을 모두 내려도 상한 ${fmtEok(capOf(y))}억을 넘습니다. "샐러리캡 초과 허용"을 켜면 저장할 수 있습니다.`);
+    }
+    return out;
+  }
+  function capImpact(after, before, teams, y) {
+    return '<div class="tr-delta">' + [...new Set(teams)].filter(Boolean).map(t => {
+      const b = before.teams[t].years[y], a = after.teams[t].years[y], d = a.top40 - b.top40, cap = capOf(y);
+      const note = a.top40 > cap + 1 ? '<span class="over">상한 초과</span>'
+        : a.rate < 1 ? `<span class="hint">옵션 실행률 ${Math.round(a.rate * 100)}%로 낮춰 상한에 맞춤</span>` : `<span class="hint">여유 ${fmtEok(cap - a.top40)}</span>`;
+      return `<div>${esc(t)} ${y} 상위 40인<br><b>${fmtEok(b.top40)}</b> → <b class="${a.top40 > cap + 1 ? 'over' : ''}">${fmtEok(a.top40)}억</b> (${d >= 0 ? '+' : '−'}${fmtEok(Math.abs(d))}) ${note}</div>`;
+    }).join('') + '</div>';
   }
 
   // ---------------- 화면 상태 ----------------
@@ -984,7 +1082,7 @@
   const order = () => TEAMS.slice().sort((a, b) => topOf(b, year) - topOf(a, year));
 
   const seasonSel = document.getElementById('season-select');
-  seasonSel.innerHTML = YEARS.map(y => `<option value="${y}">${y}${y === 2027 ? ' (예상)' : ' (계약분)'}</option>`).join('');
+  seasonSel.innerHTML = ALL_YEARS.map(y => `<option value="${y}">${y}${y === 2026 ? ' (실제)' : y === 2027 ? ' (예상)' : ' (계약분)'}</option>`).join('');
   const teamSel = document.getElementById('team-select');
 
   function renderLeagueStrip() {
@@ -1003,13 +1101,15 @@
     const pct = (m) => (m / cap * 100).toFixed(1) + '%';
     const rateTxt = Y.rate < 1 ? ` · 옵션 실행률 ${Math.round(Y.rate * 100)}%로 상한에 맞춤` : '';
     const tiles = [
-      { label: `상위 40인 합계 (${year === 2027 ? '예상' : '계약분'})`, value: fmtEok(Y.top40), unit: `억원 (${pct(Y.top40)})`,
-        foot: (year === 2027 ? `확정 ${fmtEok(Y.guar + Y.opt)} + 재계약 예측 ${fmtEok(Y.pred)}억` : `계약된 선수 ${Y.contracted}명 · 재계약·FA 미반영`) + rateTxt, navy: true },
+      { label: `상위 40인 합계 (${year === 2026 ? '실제' : year === 2027 ? '예상' : '계약분'})`, value: fmtEok(Y.top40), unit: `억원 (${pct(Y.top40)})`,
+        foot: (year === 2026 ? `2026 실제 산정액 · 예외선수 ${Y.ex || '없음'} 50% 감면` : year === 2027 ? `확정 ${fmtEok(Y.guar + Y.opt)} + 재계약 예측 ${fmtEok(Y.pred)}억` : `계약된 선수 ${Y.contracted}명 · 재계약·FA 미반영`) + rateTxt, navy: true },
       { label: `${year}년 상한액 대비${capKnown(year) ? '' : ' (가정)'}`, value: (room >= 0 ? '−' : '+') + fmtEok(Math.abs(room)), unit: `억원`,
         foot: capKnown(year) ? `상한 ${fmtEok(cap)}억 · ${room >= 0 ? '상한액 이내 (여유)' : '상한액 초과'}` : `상한 미정 · 연 5% 인상 가정 ${fmtEok(cap)}억`,
         footClass: room < 100000 ? 'critical' : 'good' },
       { label: '리그 내 순위', value: rank, unit: `/ ${TEAMS.length}구단`, foot: `${year} 상위 40인 합계 기준` },
-      year === 2027
+      year === 2026
+        ? (() => { const d = T.years[2027].top40 - Y.top40; return { label: '2027 예상 대비', value: (d >= 0 ? '+' : '−') + fmtEok(Math.abs(d)), unit: '억원', foot: `2026 실제 ${fmtEok(Y.top40)}억 → 2027 예상 ${fmtEok(T.years[2027].top40)}억`, navy: true }; })()
+        : year === 2027
         ? (() => { const s = D.floor - Y.floor_basis; return { label: '하한액 대비 (2027~)', value: (s > 0 ? '−' : '+') + fmtEok(Math.abs(s)), unit: '억원',
             foot: s > 0 ? `하한 ${fmtEok(D.floor)}억에 미달` : `하한 ${fmtEok(D.floor)}억 충족 (감면·옵션 제외 기준)`, footClass: s > 0 ? 'critical' : 'good', navy: true }; })()
         : { label: '2026 대비', value: fmtEok(Y.top40 - T.y2026), unit: '억원', foot: `2026 실제 ${fmtEok(T.y2026)}억 → ${year} 계약분`, navy: true },
@@ -1045,7 +1145,7 @@
         <div class="yr-val">${fmtEok(total)}억<small class="${cls}">${esc(sub)}</small></div></div>`;
     }).join('');
     document.querySelectorAll('.yr-row').forEach(el => {
-      const go = () => { const y = +el.dataset.year; if (y === 2026) return; year = y; seasonSel.value = y; sortKey = 'cur'; sortAsc = false; renderTeam(); };
+      const go = () => { const y = +el.dataset.year; year = y; seasonSel.value = y; sortKey = 'cur'; sortAsc = false; renderTeam(); };
       el.addEventListener('click', go);
       el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     });
@@ -1062,7 +1162,9 @@
     return KIND[c.k];
   }
 
-  const cellVal = (p, y) => { if (y === 2026) return p.y2026 ?? -1; const c = p.cells[y]; return c ? (c.eff ?? c.v) : -1; };
+  // 예외선수(50% 감면)는 상한 계산에 들어가는 값(감면 후)으로 보여 주고 정렬한다
+  const exFactor = (p, y) => (y === 2026 ? (p.ex ? 0.5 : 1) : (p.cells[y]?.ex ? 0.5 : 1));
+  const cellVal = (p, y) => { if (y === 2026) return p.y2026 != null ? p.y2026 * exFactor(p, y) : -1; const c = p.cells[y]; return c ? (c.eff ?? c.v) * exFactor(p, y) : -1; };
 
   function renderTable() {
     const T = M.teams[currentTeam], Y = T.years[year];
@@ -1076,7 +1178,7 @@
       if (effKey === 'rank') return rankOf.get(p) ?? 999;
       if (effKey === 'name' || effKey === 'pos') return p[effKey] || '';
       if (effKey === 'age') return p.age ?? 0;
-      if (effKey === 'type') return (p.cells[year]?.k) || 'Z';
+      if (effKey === 'type') return (year === 2026 ? (p.ex ? 'A' : 'B') : (p.cells[year]?.k)) || 'Z';
       return cellVal(p, +effKey);
     };
     const rows = T.players.slice().sort((a, b) => {
@@ -1102,23 +1204,36 @@
       ].join(' ');
       const cells = ALL_YEARS.map(y => {
         const sel = y === year ? ' sel' : '';
-        if (y === 2026) return `<td class="yc${sel}">${p.y2026 != null ? fmtManwon(p.y2026) : '<span class="c-none">—</span>'}</td>`;
+        const exTip = (full) => `예외선수(제185조) 50% 감면: 원래 ${fmtManwon(full)} → 상한 계산 ${fmtManwon(full / 2)}`;
+        if (y === 2026) {
+          if (p.y2026 == null) return `<td class="yc${sel}"><span class="c-none">—</span></td>`;
+          return p.ex ? `<td class="yc exc${sel}"><span class="is-ex" title="${esc(exTip(p.y2026))}">${fmtManwon(p.y2026 / 2)}</span></td>`
+                      : `<td class="yc${sel}">${fmtManwon(p.y2026)}</td>`;
+        }
         const c = p.cells[y];
-        return `<td class="yc${sel}">${c ? `<span class="c-${c.k}${c.est ? ' est' : ''}${c.cu || c.tr ? ' cu' : ''}" title="${esc(cellTip(c, T.years[y].rate))}">${fmtManwon(c.eff ?? c.v)}</span>` : '<span class="c-none">—</span>'}</td>`;
+        if (!c) return `<td class="yc${sel}"><span class="c-none">—</span></td>`;
+        const val = c.eff ?? c.v, ex = c.ex;
+        const tip = cellTip(c, T.years[y].rate) + (ex ? ' · ' + exTip(val) : '');
+        return `<td class="yc${ex ? ' exc' : ''}${sel}"><span class="c-${c.k}${c.est ? ' est' : ''}${c.cu || c.tr ? ' cu' : ''}${ex ? ' is-ex' : ''}" title="${esc(tip)}">${fmtManwon(ex ? val / 2 : val)}</span></td>`;
       }).join('');
-      return `<tr class="${p.cells[year] ? '' : 'outside40'}">
+      return `<tr class="${(year === 2026 ? p.y2026 != null : p.cells[year]) ? '' : 'outside40'}">
         <td class="rank ${top ? 'cap-target' : ''}">${r ?? '—'}</td>
         <td class="name">${esc(p.name)}<button type="button" class="btn sm row-act" data-pid="${esc(p.pid)}" data-team="${esc(currentTeam)}" title="이 선수 계약 만들기·수정·삭제">✎</button></td>
         <td>${esc(p.pos)}</td><td class="mono num">${p.age ?? '—'}</td>
         <td>${badges}</td>${cells}</tr>`;
     }).join('');
-    document.getElementById('table-note').textContent = `${T.players.length}명 · 단위 만원 · ${year} 기준 순위 (예외선수 50% 감면 반영) · ✎로 계약 만들기·수정`;
-    document.getElementById('table-foot').textContent = (year === 2027
+    document.getElementById('table-note').textContent = `${T.players.length}명 · 단위 만원 · ${year} 기준 순위 (예외선수 50% 감면 반영) · 보라색 ½ 칸은 예외선수 50% 감면 후 값 · ✎로 계약 만들기·수정`;
+    document.getElementById('table-foot').textContent = year === 2026
+      ? '2026년 실제 산정액 기준 순위입니다(떠난 선수도 순위에 포함돼 번호가 건너뛸 수 있음). 보라색 ½ 칸은 2026년 예외선수 50% 감면 후 값입니다. 연도 열 제목을 누르면 그 해 기준으로 바뀝니다.'
+      : (year === 2027
       ? `순위가 색으로 강조된 40명이 ${year} 경쟁균형세 산정 대상입니다. 파란 기울임 숫자는 모델 예측 연봉, 주황 숫자는 조건부 옵션 연장 구간, 점선 밑줄은 그 시즌 연봉을 추정한 구방식 계약, 밑줄 색은 커스텀 계약입니다.`
       : `${year}년에 계약이 남아 있는 선수는 ${Y.contracted}명입니다. 나머지 자리는 재계약·FA 영입으로 채워지므로 실제 합계는 더 커집니다.`)
-      + (Y.rate < 1 ? ` 옵션 전액을 주면 상한을 넘어, 옵션 실행률을 ${Math.round(Y.rate * 100)}%로 낮춰 상한에 맞췄습니다.` : ' 옵션은 상한에 걸리지 않아 100% 실행으로 계산했습니다.');
+      + (Y.over ? (ALLOW_OVER ? ' 상한을 넘지만 "샐러리캡 초과 허용"이 켜져 있어 옵션을 100% 반영했습니다.' : ' 옵션을 모두 내려도 상한을 넘습니다.')
+        : Y.rate < 1 ? ` 옵션 전액을 주면 상한을 넘어, 옵션 실행률을 ${Math.round(Y.rate * 100)}%로 낮춰 상한에 맞췄습니다.` : ' 옵션은 상한에 걸리지 않아 100% 실행으로 계산했습니다.');
     document.querySelectorAll('#thead-row th').forEach(th => th.addEventListener('click', () => {
       const k = th.dataset.key;
+      // 연도 열 제목을 누르면 그 해를 기준 연도로 (순위·예외선수·상단 카드가 함께 바뀜)
+      if (/^\d{4}$/.test(k) && +k !== year) { year = +k; seasonSel.value = k; sortKey = 'cur'; sortAsc = false; renderTeam(); return; }
       if (k === effKey) sortAsc = !sortAsc; else { sortKey = k; sortAsc = ['rank', 'name', 'pos', 'type'].includes(k); }
       renderTable();
     }));
@@ -1146,7 +1261,7 @@
     const Y27 = T.years[2027];
     document.getElementById('team-sub').textContent =
       `2027년 상위 40인 예상 ${fmtEok(Y27.top40)}억원(상한 ${fmtEok(capOf(2027))}억). 이 중 다년·단년 확정 ${fmtEok(Y27.guar)}억, 옵션 연장 ${fmtEok(Y27.opt)}억, 재계약 예측 ${fmtEok(Y27.pred)}억입니다. ` +
-      `이미 계약으로 묶인 금액은 ${YEARS.slice(1).map(y => `${y}년 ${fmtEok(T.years[y].top40)}억`).join(', ')}입니다. 예외선수(상한 계산 50%): 2026 ${T.ex}, ${year} ${T.years[year].ex || '없음'}.`;
+      `이미 계약으로 묶인 금액은 ${YEARS.slice(1).map(y => `${y}년 ${fmtEok(T.years[y].top40)}억`).join(', ')}입니다. 예외선수(상한 계산 50%): 2026 ${T.ex}${year === 2026 ? '' : `, ${year} ${T.years[year].ex || '없음'}`}.`;
     renderLeagueStrip(); renderTiles(); renderYears(); renderTable(); renderGone();
   }
 
@@ -1359,14 +1474,24 @@
     const per = Object.entries(cells).map(([y, c]) => `${y} <b>${fmtEok2(c.v)}</b>억${c.k === 'O' ? '(옵션연장)' : ''}`).join(' · ');
     const total = it.perYear ? it.perYear.reduce((s, v) => s + v, 0) : it.bonus + it.salary + it.option + it.optAmount;
     const moving = it.fromTeam && it.fromTeam !== it.team;
+    let impact = '';
+    form.viol = [];
+    if (!errs.filter(Boolean).length) {
+      const others = store.items.filter(x => x.id !== form.editId);
+      form.before ||= buildModel(sortedItems(others));
+      const after = buildModel(sortedItems([...others, it]));
+      const teams = [it.team, it.fromTeam];
+      impact = capImpact(after, form.before, teams, it.start);
+      form.viol = capViolations(after, form.before, teams);
+    }
     el.innerHTML = `총액 <b>${total.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}억</b> · 연도별 산정액: ${per || '—'}` +
-      (moving ? `<br>${esc(it.fromTeam)} → ${esc(it.team)} 이적: ${it.start}년부터 ${esc(it.fromTeam)}의 계약·재계약 예측은 빠집니다.` : '');
-    $('f-err').textContent = errs[0] || '';
+      (moving ? `<br>${esc(it.fromTeam)} → ${esc(it.team)} 이적: ${it.start}년부터 ${esc(it.fromTeam)}의 계약·재계약 예측은 빠집니다.` : '') + impact;
+    $('f-err').textContent = errs[0] || form.viol[0] || '';
   }
 
   function openForm(opt = {}) {
     fillPlayers();
-    form = { editId: null, createdAt: null, orig: null, newPid: null };
+    form = { editId: null, createdAt: null, orig: null, newPid: null, before: null, viol: [] };
     ['f-bonus', 'f-salary', 'f-option', 'f-oamount'].forEach(id => $(id).value = 0);
     $('f-years').value = 4; $('f-oyears').value = 0; $('f-note').value = ''; $('f-peryear-on').checked = false; $('f-peryear').value = '';
     $('f-start').value = String(YEARS[0]);
@@ -1421,6 +1546,7 @@
     form.tried = true;
     const { it, errs } = readForm();
     if (errs.length) { $('f-err').textContent = errs[0] || '선수를 입력하세요.'; return; }
+    if (it.type !== 'delete') { preview(); if (form.viol.length) { $('f-err').textContent = form.viol[0]; return; } }
     $('f-save').disabled = true;
     await store.put(it);
     $('f-save').disabled = false;
@@ -1549,11 +1675,11 @@
     const y = TS.season, cap = capOf(y);
     const line = (from, to, s) => `<b style="font-family:inherit">${esc(from)} → ${esc(to)}</b>: ${esc(sideText(s, from))}`;
     let html = `${line(it.teamA, it.teamB, it.sideA)}<br>${line(it.teamB, it.teamA, it.sideB)}`;
+    TS.viol = [];
     if (after) {
-      html += '<div class="tr-delta">' + [it.teamA, it.teamB].map(t => {
-        const b = TS.now.teams[t].years[y].top40, a = after.teams[t].years[y].top40, d = a - b;
-        return `<div>${esc(t)} ${y} 상위 40인<br><b>${fmtEok(b)}</b> → <b class="${a > cap ? 'over' : ''}">${fmtEok(a)}억</b> (${d >= 0 ? '+' : '−'}${fmtEok(Math.abs(d))}) ${a > cap ? '<span class="over">상한 초과</span>' : `<span class="hint">여유 ${fmtEok(cap - a)}</span>`}</div>`;
-      }).join('') + '</div>';
+      html += capImpact(after, TS.now, [it.teamA, it.teamB], y);
+      TS.viol = capViolations(after, TS.now, [it.teamA, it.teamB]);
+      if (TS.viol.length) html += `<div class="ferr">${esc(TS.viol[0])}</div>`;
       if (after.warns.length > TS.now.warns.length) html += `<div class="ferr">${esc(after.warns[after.warns.length - 1])}</div>`;
     }
     $('t-preview').innerHTML = html;
@@ -1617,6 +1743,8 @@
     TS.tried = true;
     const { it, errs } = readTrade();
     if (errs.length) { $('t-err').textContent = errs[0]; return; }
+    tradePreview();
+    if (TS.viol?.length) { $('t-err').textContent = TS.viol[0]; return; }
     $('t-save').disabled = true;
     await store.put(it);
     $('t-save').disabled = false;
@@ -1644,7 +1772,36 @@
   seasonSel.addEventListener('change', () => { year = +seasonSel.value; sortKey = 'cur'; sortAsc = false; renderTeam(); });
   teamSel.addEventListener('change', () => { currentTeam = teamSel.value; sortKey = 'cur'; sortAsc = false; renderTeam(); });
   document.querySelectorAll('.tabbar [data-tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
-  document.getElementById('cc-apply').addEventListener('change', refresh);
+  // 토글 상태는 이 브라우저에 기억
+  const TG_KEY = 'kbo-cap-toggles-v1';
+  try { const s = JSON.parse(localStorage.getItem(TG_KEY) || '{}'); if (typeof s.over === 'boolean') $('cap-over').checked = s.over; if (typeof s.apply === 'boolean') $('cc-apply').checked = s.apply; } catch (e) { /* 무시 */ }
+  ALLOW_OVER = $('cap-over').checked;
+  const saveToggles = () => { try { localStorage.setItem(TG_KEY, JSON.stringify({ over: $('cap-over').checked, apply: $('cc-apply').checked })); } catch (e) { /* 무시 */ } };
+  $('cc-apply').addEventListener('change', () => { saveToggles(); refresh(); });
+  $('cap-over').addEventListener('change', () => { ALLOW_OVER = $('cap-over').checked; saveToggles(); refresh(); });
+
+  // 화면 테마: 기본은 시스템 설정을 따르고, 라이트/다크를 고르면 이 브라우저에 기억
+  const dock = $('theme-dock'), ICON = { auto: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>', light: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', dark: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>' };
+  const sysDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function applyTheme(mode) {
+    if (mode === 'light' || mode === 'dark') document.documentElement.setAttribute('data-theme', mode);
+    else document.documentElement.removeAttribute('data-theme');
+    $('theme-cur').innerHTML = ICON[mode] || ICON.auto;
+    $('theme-cur').title = '화면 테마: ' + ({ auto: '시스템(' + (sysDark?.matches ? '다크' : '라이트') + ')', light: '라이트', dark: '다크' }[mode] || '시스템');
+    dock.querySelectorAll('[data-theme-set]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.themeSet === mode)));
+  }
+  let themeMode = 'auto';
+  try { const s = localStorage.getItem('kbo-theme'); if (s === 'light' || s === 'dark') themeMode = s; } catch (e) { /* 무시 */ }
+  applyTheme(themeMode);
+  sysDark?.addEventListener?.('change', () => applyTheme(themeMode));
+  dock.querySelectorAll('[data-theme-set]').forEach(b => b.addEventListener('click', () => {
+    themeMode = b.dataset.themeSet;
+    try { if (themeMode === 'auto') localStorage.removeItem('kbo-theme'); else localStorage.setItem('kbo-theme', themeMode); } catch (e) { /* 무시 */ }
+    applyTheme(themeMode); dock.classList.remove('open'); $('theme-cur').setAttribute('aria-expanded', 'false');
+  }));
+  // 터치 기기(호버 없음)는 눌러서 펼치기
+  $('theme-cur').addEventListener('click', () => { const o = dock.classList.toggle('open'); $('theme-cur').setAttribute('aria-expanded', String(o)); });
+  document.addEventListener('click', (e) => { if (!dock.contains(e.target)) { dock.classList.remove('open'); $('theme-cur').setAttribute('aria-expanded', 'false'); } });
   document.getElementById('fix-wrap').innerHTML = D.fixes.length
     ? '<br>데이터 보정: <ul class="fix-list">' + D.fixes.map(f => `<li>${esc(f)}</li>`).join('') + '</ul>' : '';
   if (location.hash === '#custom') setTab('custom');
