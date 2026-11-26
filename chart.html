@@ -562,6 +562,23 @@
   .theme-dock .theme-menu button:hover { background: var(--row-stripe); }
   .theme-dock .theme-menu button[aria-checked="true"]:hover { background: var(--accent); }
   .cap-viol { color: var(--critical); font-weight: 700; }
+  :root { --total-tx: var(--cat-1); }
+  :root[data-theme="dark"] { --total-tx: #ffffff; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --total-tx: #ffffff; } }
+  .f-total { text-align: right; font-size: 28px; font-weight: 800; letter-spacing: -0.01em; color: var(--total-tx); margin-top: 10px; min-height: 34px; font-variant-numeric: tabular-nums; }
+  .modal [hidden] { display: none !important; }
+  .cf-msg { font-size: 14px; line-height: 1.6; margin: 0 0 12px; }
+  .cf-opts { display: flex; flex-direction: column; gap: 8px; }
+  .cf-opt { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line-strong);
+    background: var(--card); color: var(--ink); font: inherit; cursor: pointer; }
+  .cf-opt:hover:not(:disabled) { border-color: var(--accent); }
+  .cf-opt:disabled { opacity: .45; cursor: not-allowed; }
+  .cf-opt b { font-size: 14.5px; } .cf-opt span { font-size: 12.5px; color: var(--ink-2); }
+  .cf-opt.danger b { color: var(--critical); }
+  .gap-note { margin-top: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5;
+    background: color-mix(in srgb, var(--cat-3) 16%, var(--card)); border: 1px solid color-mix(in srgb, var(--cat-3) 45%, transparent); }
+  .btn.danger-fill { background: var(--critical); border-color: var(--critical); color: #fff; }
+  .btn.danger-fill:hover { filter: brightness(1.08); }
   .badge.ex { background: color-mix(in srgb, var(--cat-5) 18%, var(--card)); color: var(--cat-5); }
   /* 예외선수 50% 감면 칸: 보라 배경 + 보라 글자, 앞에 ½ 표시 */
   td.yc.exc { background: color-mix(in srgb, var(--cat-5) 14%, transparent); }
@@ -752,7 +769,6 @@
     <div class="seg" id="f-type">
       <label><input type="radio" name="ftype" value="new" checked> 새 계약</label>
       <label><input type="radio" name="ftype" value="edit"> 기존 계약 수정</label>
-      <label><input type="radio" name="ftype" value="delete"> 계약 삭제</label>
     </div>
     <div class="frow"><label>선수 <span class="hint">이름을 입력해 고르세요. 명단에 없는 선수는 이름만 적으면 새로 만듭니다.</span>
       <input id="f-player" list="f-players" autocomplete="off" placeholder="예: 원태인"></label>
@@ -771,12 +787,23 @@
     <div class="frow"><label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="f-peryear-on"> 연도별 산정액 직접 입력</label>
       <input id="f-peryear" placeholder="억 단위, 쉼표로 구분 (보장 연도 다음 옵션 연장 연도 순)" hidden></div>
     <div class="frow"><label>메모 <input id="f-note" maxlength="200" placeholder="예: 2026 FA 이적 가정"></label></div>
+    <div class="gap-note" id="f-gapnote" hidden></div>
     <div class="preview" id="f-preview"></div>
     <div class="ferr" id="f-err"></div>
+    <div class="f-total" id="f-total" aria-live="polite"></div>
     <div class="modal-actions">
       <button type="button" class="btn" id="f-cancel">취소</button>
+      <button type="button" class="btn danger-fill" id="f-recreate" hidden title="기존 계약의 남은 연도(2027년~)를 없애고 입력한 조건으로 새 계약을 만듭니다. 2026년까지 진행된 부분은 그대로 둡니다">계약 파기 및 재생성</button>
       <button type="button" class="btn primary" id="f-save">저장</button>
     </div>
+  </div>
+</div>
+<div class="modal-bg" id="cf-modal" role="dialog" aria-modal="true" aria-labelledby="cf-title">
+  <div class="modal">
+    <h3 id="cf-title">계약 기간이 겹칩니다</h3>
+    <p class="cf-msg" id="cf-msg"></p>
+    <div class="cf-opts" id="cf-opts"></div>
+    <div class="ferr" id="cf-err"></div>
   </div>
 </div>
 <div class="modal-bg" id="tr-modal" role="dialog" aria-modal="true" aria-labelledby="tr-title">
@@ -967,7 +994,9 @@
       const hs = holders(c.pid);
       if (c.type === 'delete') {
         for (const [, p] of hs) {
-          for (let y = c.origStart; y <= c.origEnd; y++) { const cell = p.cells[y]; if (cell && 'GOSD'.includes(cell.k)) delete p.cells[y]; }
+          for (let y = c.origStart; y <= c.origEnd; y++) { const cell = p.cells[y]; if (cell && (c.keepDead ? 'GOS' : 'GOSD').includes(cell.k)) delete p.cells[y]; }
+          // 앞부분만 남긴 계약은 종료 연도도 줄여 표시 (예: ~2037 계약을 2028까지만 유지하면 ~2028)
+          for (const [y, cell] of Object.entries(p.cells)) if (+y < c.origStart && !cell.cu && cell.end >= c.origStart) cell.end = c.origStart - 1;
           p.custom = c.id;
         }
         continue;
@@ -976,7 +1005,11 @@
       const ys = Object.keys(cells).map(Number);
       for (const [t, p] of hs) {
         for (const y of Object.keys(p.cells).map(Number)) {
-          const moving = t !== c.team && y >= c.start && p.cells[y].k !== 'D';   // 옵트아웃 잔여 계약금은 원소속 구단에 그대로
+          // 다른 구단의 그 이후 기록은 지운다. 단, 옵트아웃 잔여 계약금(D)과 사용자가 넣은 계약(커스텀·트레이드로 옮긴 계약)은
+          // 남긴다 - 겹치는 계약은 저장 전에 '계약 기간이 겹칩니다' 단계에서 이미 정리됨
+          const cl = p.cells[y];
+          const userContract = (cl.cu || cl.tr) && 'GOS'.includes(cl.k);
+          const moving = t !== c.team && y >= c.start && cl.k !== 'D' && !userContract;
           const inOrig = c.type === 'edit' && y >= (c.origStart ?? 9999) && y <= (c.origEnd ?? 0);
           if (moving || ys.includes(y) || (t === c.team && inOrig)) delete p.cells[y];
         }
@@ -1303,7 +1336,7 @@
       const n = c.years || 0, oy = c.optYears || 0;
       const total = c.type === 'delete' ? '' : (Array.isArray(c.perYear) && c.perYear.length ? c.perYear.reduce((s, v) => s + num(v), 0) : num(c.bonus) + num(c.salary) + num(c.option) + num(c.optAmount));
       const period = c.type === 'delete' ? `${c.origStart}~${c.origEnd}` : `${c.start}~${c.start + n - 1}${oy ? ` (+${oy}년 옵션)` : ''}`;
-      const comp = c.type === 'delete' ? '계약 삭제' : `계약금 ${num(c.bonus)} · 연봉 ${num(c.salary)} · 옵션 ${num(c.option)}${oy ? ` · 연장옵션 ${num(c.optAmount)}` : ''}`;
+      const comp = c.type === 'delete' ? '계약 삭제' : (Array.isArray(c.perYear) && c.perYear.length) ? '연도별 산정액 직접 입력' : `계약금 ${num(c.bonus)} · 연봉 ${num(c.salary)} · 옵션 ${num(c.option)}${oy ? ` · 연장옵션 ${num(c.optAmount)}` : ''}`;
       return `<tr>
         <td><span class="cc-type ${esc(c.type)}">${TYPE[c.type] || ''}</span></td>
         <td class="name">${esc(c.name)}</td>
@@ -1313,7 +1346,7 @@
         <td>${esc(comp)}</td>
         <td class="mono" style="font-size:12px">${esc(per || '—')}</td>
         <td>${esc(c.note || '')}</td>
-        <td style="white-space:nowrap"><button type="button" class="btn sm" data-edit="${esc(c.id)}">수정</button> <button type="button" class="btn sm danger" data-del="${esc(c.id)}">${c.type === 'new' ? '삭제' : '되돌리기'}</button></td>
+        <td style="white-space:nowrap">${c.type === 'delete' ? '' : `<button type="button" class="btn sm" data-edit="${esc(c.id)}">수정</button> `}<button type="button" class="btn sm danger" data-del="${esc(c.id)}">${c.type === 'new' ? '삭제' : '되돌리기'}</button></td>
       </tr>`;
     }).join('') : '<tr><td colspan="9" class="cc-empty">아직 만든 커스텀 계약이 없습니다. "새 계약 만들기", "트레이드"나 선수 이름 옆 ✎로 시작하세요.</td></tr>';
     if (M.warns.length) document.getElementById('cc-body').insertAdjacentHTML('afterbegin', `<tr><td colspan="9" class="ferr">${M.warns.map(esc).join('<br>')}</td></tr>`);
@@ -1411,7 +1444,10 @@
     $('f-peryear-on').closest('.frow').style.display = t === 'delete' ? 'none' : '';
     if (t !== 'new') fillOrig(p);
     $('f-peryear').hidden = !$('f-peryear-on').checked;
-    $('cc-title').textContent = { new: '계약 만들기', edit: '기존 계약 수정', delete: '계약 삭제' }[t];
+    $('cc-title').textContent = form?.gap ? `빈 기간 채우기 · ${form.gap.kind === 'single' ? '단년' : '다년'} 계약`
+      : form?.editId ? '커스텀 계약 수정' : { new: '계약 만들기', edit: '기존 계약 수정', delete: '계약 삭제' }[t];
+    $('f-type').hidden = !!(form?.editId || form?.gap);   // 저장해 둔 커스텀 계약을 고치거나 빈 기간을 채울 땐 종류를 바꾸지 않는다
+    $('f-recreate').hidden = !!form?.gap || !(form?.editId || t === 'edit');
     preview();
   }
 
@@ -1444,7 +1480,7 @@
     if (!text) errs.push(form.tried ? '선수를 입력하세요.' : '');
     const it = { id: form.editId || ('cc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), type: t,
                  createdAt: form.createdAt || Date.now(), updatedAt: Date.now(), note: $('f-note').value.trim().slice(0, 200) };
-    if (p) { it.pid = p.pid; it.name = p.name; it.pos = p.pos || ''; it.fromTeam = p.team; }
+    if (p) { it.pid = p.pid; it.name = p.name; it.pos = p.pos || ''; it.fromTeam = form.gap ? form.gap.team : p.team; }
     else { it.pid = form.newPid || ('custom-' + Date.now().toString(36)); it.name = text.replace(/\s*\(#.*$/, '').slice(0, 30); it.pos = ''; it.fromTeam = ''; if (t !== 'new') errs.push('수정·삭제는 명단에 있는 선수만 고를 수 있습니다.'); }
     if (t !== 'new') {
       const c = contractOptions(p)[+$('f-orig').value];
@@ -1458,6 +1494,12 @@
     if (it.years < 1) errs.push('보장 연수는 1년 이상이어야 합니다.');
     if ([it.bonus, it.salary, it.option, it.optAmount].some(v => v < 0)) errs.push('금액은 0 이상이어야 합니다.');
     if (it.optYears > 0 && it.optAmount <= 0) errs.push('옵션 연장 연수를 넣었으면 금액도 넣으세요.');
+    if (form.gap) {
+      const end = it.start + it.years + it.optYears - 1;
+      if (form.gap.kind === 'multi' && it.years < 2) errs.push('다년 계약은 보장 2년 이상이어야 합니다.');
+      if (it.start < form.gap.from || end > form.gap.to)
+        errs.push(`방금 추가한 새 계약(${form.gap.newLabel})과 겹치므로 저장할 수 없습니다. ${form.gap.from === form.gap.to ? form.gap.from + '년' : form.gap.from + '~' + form.gap.to + '년'} 안에서만 만들 수 있습니다.`);
+    }
     if ($('f-peryear-on').checked) {
       const arr = $('f-peryear').value.split(/[,\s]+/).filter(Boolean).map(Number);
       if (!arr.length || arr.some(v => !Number.isFinite(v) || v < 0)) errs.push('연도별 산정액은 0 이상의 숫자를 쉼표로 구분해 넣으세요.');
@@ -1467,9 +1509,17 @@
     return { it, errs };
   }
 
+  // "4년 80억", 옵션 연장이 있으면 "5+3년 310억"(옵션 포함 총액)
+  function totalLabel(it) {
+    if (!it || it.type === 'delete') return '';
+    const n = it.years || 0, oy = it.optYears || 0;
+    const tot = Array.isArray(it.perYear) && it.perYear.length ? it.perYear.reduce((s, v) => s + num(v), 0) : num(it.bonus) + num(it.salary) + num(it.option) + num(it.optAmount);
+    return `${oy ? `${n}+${oy}` : n}년 ${tot.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}억`;
+  }
   function preview() {
     const { it, errs } = readForm();
     const el = $('f-preview');
+    $('f-total').textContent = totalLabel(it);
     if (it.type === 'delete') {
       el.innerHTML = it.origStart ? `<b>${esc(it.name)}</b>의 ${esc(it.origLabel)} 계약을 표에서 뺍니다 (${it.origStart}~${it.origEnd}).` : '삭제할 계약을 고르세요.';
       $('f-err').textContent = errs[0] || ''; return;
@@ -1495,7 +1545,9 @@
 
   function openForm(opt = {}) {
     fillPlayers();
-    form = { editId: null, createdAt: null, orig: null, newPid: null, before: null, viol: [] };
+    form = { editId: null, createdAt: null, orig: null, newPid: null, before: null, viol: [], gap: null };
+    ['f-player', 'f-team', 'f-start', 'f-years', 'f-oyears'].forEach(id => { $(id).disabled = false; });
+    $('f-gapnote').hidden = true;
     ['f-bonus', 'f-salary', 'f-option', 'f-oamount'].forEach(id => $(id).value = 0);
     $('f-years').value = 4; $('f-oyears').value = 0; $('f-note').value = ''; $('f-peryear-on').checked = false; $('f-peryear').value = '';
     $('f-start').value = String(YEARS[0]);
@@ -1516,6 +1568,13 @@
         if (c.perYear) { $('f-peryear-on').checked = true; $('f-peryear').value = c.perYear.join(', '); }
       }
       $('f-note').value = c.note || '';
+    } else if (opt.pid && !opt.type && (() => {
+        const mine = store.items.filter(x => x.pid === opt.pid && (x.type === 'new' || x.type === 'edit') && (!opt.team || x.team === opt.team))
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0];
+        if (mine) { openForm({ editId: mine.id }); return true; }
+        return false;
+      })()) {
+      return;
     } else {
       const p = opt.pid ? allPlayers().get(opt.pid) : null;
       $('f-player').value = p ? playerLabel(p) : '';
@@ -1545,18 +1604,132 @@
   $('f-peryear-on').addEventListener('change', syncForm);
   $('f-cancel').addEventListener('click', closeForm);
   $('cc-modal').addEventListener('click', (e) => { if (e.target === $('cc-modal')) closeForm(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeForm(); $('io-modal').classList.remove('open'); $('tr-modal').classList.remove('open'); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeForm(); $('io-modal').classList.remove('open'); $('tr-modal').classList.remove('open'); $('cf-modal').classList.remove('open'); CF = null; } });
+  $('f-recreate').addEventListener('click', async () => {
+    form.tried = true;
+    const { it, errs } = readForm();
+    if (errs.filter(Boolean).length) { $('f-err').textContent = errs.filter(Boolean)[0]; return; }
+    const b = $('f-recreate');
+    if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = '한 번 더 누르면 기존 계약 파기'; setTimeout(() => { b.dataset.armed = ''; b.textContent = '계약 파기 및 재생성'; }, 3000); return; }
+    b.dataset.armed = ''; b.textContent = '계약 파기 및 재생성';
+    const now = Date.now(), uid = () => 'cc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const old = form.editId ? store.items.find(x => x.id === form.editId) : null;
+    const add = [];
+    // 원래 계약(구단 데이터에 있던 다년계약)은 남은 연도 전부 지운다
+    const orig = old ? (old.type === 'edit' ? old : null) : (ftype() === 'edit' ? it : null);
+    if (orig && orig.origStart) add.push({ id: uid(), type: 'delete', pid: it.pid, name: it.name, pos: it.pos, fromTeam: orig.fromTeam || it.fromTeam, team: orig.fromTeam || it.fromTeam,
+      origStart: Math.max(YEARS[0], orig.origStart), origEnd: orig.origEnd, origLabel: orig.origLabel, createdAt: now, updatedAt: now, keepDead: true,
+      note: `계약 파기 (${YEARS[0] - 1}년까지 진행분 유지)` });
+    const nw = { ...it, id: uid(), type: 'new', createdAt: now + 1, updatedAt: now + 1 };
+    delete nw.origStart; delete nw.origEnd; delete nw.origLabel;
+    add.push(nw);
+    const rest = store.items.filter(x => x.id !== form.editId);
+    const before = buildModel(sortedItems(rest)), after = buildModel(sortedItems([...rest, ...add]));
+    const viol = capViolations(after, before, [it.team, it.fromTeam]);
+    if (viol.length) { $('f-err').textContent = viol[0]; return; }
+    b.disabled = true;
+    if (old) await store.remove(old.id);
+    for (const x of add) await store.put(x);
+    b.disabled = false;
+    closeForm();
+    currentTeam = it.team; teamSel.value = it.team;
+    refresh();
+  });
   $('f-save').addEventListener('click', async () => {
     form.tried = true;
     const { it, errs } = readForm();
     if (errs.length) { $('f-err').textContent = errs[0] || '선수를 입력하세요.'; return; }
     if (it.type !== 'delete') { preview(); if (form.viol.length) { $('f-err').textContent = form.viol[0]; return; } }
+    if (it.type === 'new' && !form.editId && !form.gap) {
+      const cf = findOverlap(it);
+      if (cf) { openConflict(it, cf); return; }
+    }
     $('f-save').disabled = true;
     await store.put(it);
     $('f-save').disabled = false;
     closeForm();
     if (it.team && it.type !== 'delete') currentTeam = it.team, teamSel.value = it.team;
     refresh();
+  });
+
+  // ---------- 새 계약이 기존 계약과 1년이라도 겹칠 때 ----------
+  const span = (a, b) => (a === b ? `${a}` : `${a}~${b}`);
+  function findOverlap(it) {
+    const model = form.before || buildModel(sortedItems(store.items));    // 커스텀 반영 토글과 상관없이 저장된 계약 기준
+    const newEnd = it.start + it.years + (it.optYears || 0) - 1;
+    const ys = [];
+    let team = null;
+    for (const t of TEAMS) for (const p of model.teams[t].players) {
+      if (p.pid !== it.pid) continue;
+      for (const [y, c] of Object.entries(p.cells)) if (+y >= YEARS[0] && 'GOS'.includes(c.k)) { ys.push(+y); team ||= t; }
+    }
+    const overlap = ys.filter(y => y >= it.start && y <= newEnd);
+    if (!overlap.length) return null;
+    return { team, oldStart: Math.min(...ys), oldEnd: Math.max(...ys), ovFrom: Math.min(...overlap), ovTo: Math.max(...overlap), newStart: it.start, newEnd };
+  }
+  let CF = null;
+  function cfShow(title, msg, opts) {
+    $('cf-title').textContent = title; $('cf-msg').innerHTML = msg; $('cf-err').textContent = '';
+    $('cf-opts').innerHTML = opts.map(o => `<button type="button" class="cf-opt ${o.cls || ''}" data-cf="${o.key}" ${o.disabled ? 'disabled' : ''}><b>${o.title}</b><span>${o.desc}</span></button>`).join('');
+    $('cf-modal').classList.add('open');
+  }
+  function openConflict(it, cf) {
+    CF = { it, cf, step: 'choose' };
+    const keepTo = cf.newStart - 1, keepLeft = keepTo >= cf.oldStart;
+    cfShow('계약 기간이 겹칩니다',
+      `<b>${esc(it.name)}</b>의 기존 계약(${esc(cf.team)} ${span(cf.oldStart, cf.oldEnd)})과 새 계약(${esc(it.team)} ${span(cf.newStart, cf.newEnd)})이 <b>${span(cf.ovFrom, cf.ovTo)}</b>에 겹칩니다. 어떻게 할까요?`,
+      [{ key: 'replace', cls: 'danger', title: '1) 기존 계약 파기 후 새 계약',
+         desc: `기존 계약의 남은 기간(${span(cf.oldStart, cf.oldEnd)})을 모두 지우고 새 계약을 넣습니다. ${YEARS[0] - 1}년까지 진행된 부분은 바꿀 수 없어 그대로 둡니다.` + (keepLeft ? ` 비게 되는 ${span(cf.oldStart, keepTo)}은 이어서 단년·다년 계약으로 채울 수 있습니다.` : '') },
+       { key: 'keep', title: '2) 기존 계약은 새 계약 전까지만 유지',
+         desc: keepLeft ? `기존 계약은 ${span(cf.oldStart, keepTo)}까지만 남기고, ${span(cf.newStart, cf.newEnd)}은 새 계약을 그대로 반영합니다. ${YEARS[0] - 1}년까지 진행된 부분은 바꿀 수 없어 그대로 둡니다.` : '새 계약이 기존 계약 첫해부터 시작해 남는 기간이 없습니다(1번과 같은 결과).' },
+       { key: 'back', title: '3) 돌아가기', desc: '저장하지 않고 입력하던 계약 화면으로 돌아갑니다.' }]);
+  }
+  async function commitItems(list) {
+    const before = buildModel(sortedItems(store.items)), after = buildModel(sortedItems([...store.items, ...list]));
+    const viol = capViolations(after, before, list.flatMap(x => [x.team, x.fromTeam]));
+    if (viol.length) { $('cf-err').textContent = viol[0]; return false; }
+    for (const x of list) await store.put(x);
+    return true;
+  }
+  const newId = () => 'cc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  $('cf-opts').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-cf]'); if (!b || b.disabled || !CF) return;
+    const { it, cf } = CF, k = b.dataset.cf, now = Date.now();
+    if (k === 'back') { $('cf-modal').classList.remove('open'); CF = null; return; }
+    if (CF.step === 'choose') {
+      const from = Math.max(YEARS[0], k === 'replace' ? cf.oldStart : cf.newStart);   // 지난 시즌(2026)까지는 절대 건드리지 않는다
+      const del = { id: newId(), type: 'delete', pid: it.pid, name: it.name, pos: it.pos, fromTeam: cf.team, team: cf.team, keepDead: true,
+        origStart: from, origEnd: cf.oldEnd, origLabel: `${cf.team} ${span(cf.oldStart, cf.oldEnd)}`, createdAt: now, updatedAt: now,
+        note: k === 'replace' ? `새 계약으로 대체(기존 계약 ${span(from, cf.oldEnd)} 파기, ${YEARS[0] - 1}년까지 진행분 유지)` : `새 계약 전(${span(cf.oldStart, cf.newStart - 1)})까지만 유지` };
+      const nw = { ...it, id: newId(), createdAt: now + 1, updatedAt: now + 1 };
+      if (!(await commitItems([del, nw]))) return;
+      closeForm(); currentTeam = it.team; teamSel.value = it.team; refresh();
+      const gapTo = cf.newStart - 1;
+      if (k === 'replace' && gapTo >= cf.oldStart) {
+        CF = { it, cf, step: 'gap', gap: { from: cf.oldStart, to: gapTo, team: cf.team, newLabel: `${it.team} ${span(cf.newStart, cf.newEnd)}` } };
+        const len = gapTo - cf.oldStart + 1;
+        cfShow('비게 된 기간을 채울까요?',
+          `기존 계약을 파기해 <b>${esc(it.name)}</b>의 ${esc(cf.team)} <b>${span(cf.oldStart, gapTo)}</b>이 비었습니다. 단년 계약과 다년 계약 중 고르세요. 새 계약(${esc(it.team)} ${span(cf.newStart, cf.newEnd)})과 겹치는 기간으로는 만들 수 없습니다.`,
+          [{ key: 'single', title: '단년 계약', desc: `${cf.oldStart}년 한 해 계약을 만듭니다.` },
+           { key: 'multi', title: '다년 계약', desc: len >= 2 ? `${span(cf.oldStart, gapTo)} 안에서 2년 이상 계약을 만듭니다.` : '빈 기간이 1년뿐이라 다년 계약은 만들 수 없습니다.', disabled: len < 2 },
+           { key: 'back', title: '비워 두기', desc: '빈 기간은 그대로 둡니다. 나중에 ✎로 계약을 만들 수 있습니다.' }]);
+      } else { $('cf-modal').classList.remove('open'); CF = null; }
+      return;
+    }
+    if (CF.step === 'gap') {
+      const g = { ...CF.gap, kind: k };
+      $('cf-modal').classList.remove('open'); CF = null;
+      openForm({ pid: it.pid, type: 'new', team: g.team });
+      form.gap = g;
+      $('f-team').value = g.team; $('f-start').value = String(g.from);
+      $('f-years').value = k === 'single' ? 1 : (g.to - g.from + 1); $('f-oyears').value = 0;
+      ['f-bonus', 'f-salary', 'f-option', 'f-oamount'].forEach(id => $(id).value = 0);
+      ['f-player', 'f-team'].forEach(id => { $(id).disabled = true; });
+      if (k === 'single') { $('f-years').disabled = true; $('f-oyears').disabled = true; }
+      $('f-gapnote').hidden = false;
+      $('f-gapnote').textContent = `빈 기간 ${span(g.from, g.to)} 채우기 · 방금 추가한 새 계약(${g.newLabel})과 겹치는 기간으로는 저장되지 않습니다.`;
+      syncForm();
+    }
   });
 
   $('cc-new').addEventListener('click', () => openForm({ type: 'new' }));
