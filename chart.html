@@ -680,6 +680,11 @@
   td.yc .cu { box-shadow: inset 0 -2px 0 var(--accent); }
   .row-act { margin-left: 6px; opacity: .55; }
   tr:hover .row-act { opacity: 1; }
+  /* 이름 밑 계약 총 설정 버튼: 청록 배경 + 흰 연필 */
+  .row-act.pen { opacity: 1; display: inline-grid; place-items: center; width: 28px; height: 28px; min-height: 0; padding: 0; margin: 4px auto 0;
+    background: #1c738d; border: 0; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.25); cursor: pointer; }
+  .row-act.pen:hover, .row-act.pen:focus-visible { background: #238aa8; }
+  .row-act.pen:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-start; justify-content: center; padding: 24px 12px; overflow-y: auto; z-index: 50; }
   .modal-bg.open { display: flex; }
   .modal { background: var(--card); color: var(--ink); border-radius: 12px; width: min(720px, 100%); padding: 20px 22px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
@@ -1452,7 +1457,7 @@
       }).join('');
       return `<tr class="${(year === 2026 ? p.y2026 != null : p.cells[year]) ? '' : 'outside40'}">
         <td class="rank ${top ? 'cap-target' : ''}">${r ?? '—'}</td>
-        <td class="name">${esc(p.name)}<button type="button" class="btn sm row-act" data-pid="${esc(p.pid)}" data-team="${esc(currentTeam)}"${p.isGone ? ' data-gone="1"' : ''} title="이 선수 계약 만들기·수정 (계약 총 설정)">✎</button></td>
+        <td class="name">${esc(p.name)}<button type="button" class="btn sm row-act pen" data-pid="${esc(p.pid)}" data-team="${esc(currentTeam)}"${p.isGone ? ' data-gone="1"' : ''} title="이 선수 계약 만들기·수정 (계약 총 설정)" aria-label="${esc(p.name)} 계약 총 설정"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="#fff" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button></td>
         <td>${esc(p.pos)}</td><td class="mono num">${p.age ?? '—'}</td>
         ${ctCell}${cells}</tr>`;
     }).join('');
