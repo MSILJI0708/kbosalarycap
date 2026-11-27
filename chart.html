@@ -1402,10 +1402,12 @@
     };
     // 다음 FA 취득 시즌: 서비스타임 기준(fa0)과 계약 종료 다음 해 중 늦은 쪽
     const faNextOf = (p) => {
-      if (p.isGone || p.fa0 == null) return null;
+      // 2026 시즌 후 FA 자격을 얻고 아직 계약하지 않은 선수(떠나는 선수의 'FA 자격')는 2027 칸에 FA
+      if (p.isGone) return p.status === 'FA' ? YEARS[0] : null;
+      if (p.fa0 == null) return null;
       const ends = Object.entries(p.cells).filter(([, c]) => 'GOS'.includes(c.k)).map(([y]) => +y);
       const n = Math.max(p.fa0, ends.length ? Math.max(...ends) + 1 : 0);
-      return n > YEARS[0] && n <= ALL_YEARS[ALL_YEARS.length - 1] ? n : null;
+      return n >= YEARS[0] && n <= ALL_YEARS[ALL_YEARS.length - 1] ? n : null;
     };
     document.getElementById('roster-body').innerHTML = rows.map(p => {
       const r = rankOf.get(p), top = r && r <= 40;
@@ -1445,7 +1447,7 @@
         }
         const c = p.cells[y];
         if (!c) {
-          if (faNext === y) return `<td class="yc fa-next${sel}" title="${p.name}: ${y}시즌을 앞두고 FA 자격 취득 예상"><span class="fa-tag">FA</span></td>`;
+          if (faNext === y) return `<td class="yc fa-next${sel}" title="${esc(p.name)}: ${y}시즌을 앞두고 FA 자격 ${y === YEARS[0] ? '취득 (2026 시즌 후 FA 승인)' : '취득 예상'}"><span class="fa-tag">FA</span></td>`;
           return `<td class="yc${sel}"><span class="c-none">—</span></td>`;
         }
         const val = c.eff ?? c.v, ex = c.ex, shown = ex ? val / 2 : val;
